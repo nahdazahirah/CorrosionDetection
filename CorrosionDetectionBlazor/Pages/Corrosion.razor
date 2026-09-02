@@ -2,45 +2,55 @@
 @using CorrosionDetection.Blazor.Models
 @inject HttpClient Http
 
-<h2>Upload Foto untuk Deteksi Korosi</h2>
+<div style="text-align:center; margin-top: 20px;">
+    <h2>Upload Foto untuk Deteksi Korosi</h2>
 
-<InputFile OnChange="OnFileSelected" accept="image/*" />
-
-@if (isLoading)
-{
-    <p><em>Sedang memproses...</em></p>
-}
-
-@if (imageDataUrl != null)
-{
-    <div style="position: relative; display: inline-block; margin-top: 20px;">
-        <img src="@imageDataUrl" style="max-width: 600px; display: block;" @ref="imageElement" />
-
-        @* Setiap kotak deteksi digambar sebagai <div> yang diposisikan absolute
-           di atas gambar, dihitung persentase posisinya supaya otomatis
-           menyesuaikan kalau gambar di-resize oleh CSS (max-width: 600px). *@
-        @foreach (var d in detections)
-        {
-            <div style="position:absolute;
-                        left:@(d.X / originalWidth * 100)%;
-                        top:@(d.Y / originalHeight * 100)%;
-                        width:@(d.Width / originalWidth * 100)%;
-                        height:@(d.Height / originalHeight * 100)%;
-                        border:2px solid red;
-                        box-sizing:border-box;">
-                <span style="background:red; color:white; font-size:11px; padding:1px 3px;">
-                    corrosion @((d.Confidence * 100).ToString("0.0"))%
-                </span>
-            </div>
-        }
+    <div>
+        <InputFile OnChange="OnFileSelected" accept="image/*" />
     </div>
-}
+
+    @if (isLoading)
+    {
+        <p><em>Sedang memproses...</em></p>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div>
+            <span class="alert alert-danger" role="alert" style="display:inline-block; margin-top:10px;">@errorMessage</span>
+        </div>
+    }
+
+    @if (imageDataUrl != null)
+    {
+        <div style="position: relative; display: inline-block; margin-top: 20px; border: 3px solid #333; border-radius: 6px; padding: 4px;">
+            <img src="@imageDataUrl" style="max-width: 600px; display: block;" @ref="imageElement" />
+
+            @foreach (var d in detections)
+            {
+                <div style="position:absolute;
+                    left:@(d.X / originalWidth * 100)%;
+                    top:@(d.Y / originalHeight * 100)%;
+                    width:@(d.Width / originalWidth * 100)%;
+                    height:@(d.Height / originalHeight * 100)%;
+                    border:2px solid red;
+                    box-sizing:border-box;">
+                    <span style="background:red; color:white; font-size:11px; padding:1px 3px;">
+                        corrosion @((d.Confidence * 100).ToString("0.0"))%
+                    </span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
 
 @code {
     private ElementReference imageElement;
     private string? imageDataUrl;
     private List<DetectionResult> detections = new();
     private bool isLoading = false;
+    private string? errorMessage;
     private float originalWidth = 1; // default 1 biar nggak divide-by-zero sebelum data masuk
     private float originalHeight = 1;
 
@@ -48,7 +58,8 @@
     {
         var file = e.File;
         isLoading = true;
-        detections.Clear();
+        detections.Clear();5
+        errorMessage = null;
 
         // Tampilkan preview gambar di browser (base64, cuma buat ditampilkan)
         var buffer = new byte[file.Size];
@@ -61,23 +72,41 @@
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
         content.Add(fileContent, "image", file.Name);
 
-        // GANTI base address ini sesuai alamat backend Web API kamu
-        // (diset di Program.cs Blazor, lihat Program-snippet.cs)
-        var response = await Http.PostAsync("api/corrosion/detect", content);
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();
-            if (result != null)
+            // GANTI base address ini sesuai alamat backend Web API kamu
+            // (diset di Program.cs Blazor, lihat Program-snippet.cs)
+            var response = await Http.PostAsync("api/corrosion/detect", content);
+
+            if (response.IsSuccessStatusCode)
             {
-                detections = result.Detections;
-                // Ukuran gambar asli didapat LANGSUNG dari backend (bukan ditebak),
-                // supaya perhitungan posisi kotak (%) di atas selalu akurat.
-                originalWidth = result.ImageWidth;
-                originalHeight = result.ImageHeight;
+                var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();
+                if (result != null)
+                {
+                    detections = result.Detections;
+                    // Ukuran gambar asli didapat LANGSUNG dari backend (bukan ditebak),
+                    // supaya perhitungan posisi kotak (%) di atas selalu akurat.
+                    originalWidth = result.ImageWidth;
+                    originalHeight = result.ImageHeight;
+                }
+            }
+            else
+            {
+                errorMessage = $"Server returned {(int)response.StatusCode} {response.ReasonPhrase}";
             }
         }
-
-        isLoading = false;
+        catch (System.Net.Http.HttpRequestException hre)
+        {
+            // Common in dev when backend isn't running or blocked by CORS/SSL
+            errorMessage = "Unable to reach backend API: " + hre.Message;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error while sending image: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }
