@@ -1,0 +1,83 @@
+@page "/corrosion"
+@using CorrosionDetection.Blazor.Models
+@inject HttpClient Http
+
+<h2>Upload Foto untuk Deteksi Korosi</h2>
+
+<InputFile OnChange="OnFileSelected" accept="image/*" />
+
+@if (isLoading)
+{
+    <p><em>Sedang memproses...</em></p>
+}
+
+@if (imageDataUrl != null)
+{
+    <div style="position: relative; display: inline-block; margin-top: 20px;">
+        <img src="@imageDataUrl" style="max-width: 600px; display: block;" @ref="imageElement" />
+
+        @* Setiap kotak deteksi digambar sebagai <div> yang diposisikan absolute
+           di atas gambar, dihitung persentase posisinya supaya otomatis
+           menyesuaikan kalau gambar di-resize oleh CSS (max-width: 600px). *@
+        @foreach (var d in detections)
+        {
+            <div style="position:absolute;
+                        left:@(d.X / originalWidth * 100)%;
+                        top:@(d.Y / originalHeight * 100)%;
+                        width:@(d.Width / originalWidth * 100)%;
+                        height:@(d.Height / originalHeight * 100)%;
+                        border:2px solid red;
+                        box-sizing:border-box;">
+                <span style="background:red; color:white; font-size:11px; padding:1px 3px;">
+                    corrosion @((d.Confidence * 100).ToString("0.0"))%
+                </span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private ElementReference imageElement;
+    private string? imageDataUrl;
+    private List<DetectionResult> detections = new();
+    private bool isLoading = false;
+    private float originalWidth = 1; // default 1 biar nggak divide-by-zero sebelum data masuk
+    private float originalHeight = 1;
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        isLoading = true;
+        detections.Clear();
+
+        // Tampilkan preview gambar di browser (base64, cuma buat ditampilkan)
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream(maxAllowedSize: 10_000_000).ReadAsync(buffer);
+        imageDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+
+        // Kirim ke BACKEND (Web API terpisah) buat diproses
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(buffer);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+        content.Add(fileContent, "image", file.Name);
+
+        // GANTI base address ini sesuai alamat backend Web API kamu
+        // (diset di Program.cs Blazor, lihat Program-snippet.cs)
+        var response = await Http.PostAsync("api/corrosion/detect", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();
+            if (result != null)
+            {
+                detections = result.Detections;
+                // Ukuran gambar asli didapat LANGSUNG dari backend (bukan ditebak),
+                // supaya perhitungan posisi kotak (%) di atas selalu akurat.
+                originalWidth = result.ImageWidth;
+                originalHeight = result.ImageHeight;
+            }
+        }
+
+        isLoading = false;
+    }
+}

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../CorrosionDetectionApi/CorrosionDetectionApi.csproj" />
+  <Project Path="../CorrosionDetectionBlazor/CorrosionDetectionBlazor.csproj" />
+</Solution>
