@@ -1,0 +1,53 @@
+﻿.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background-color: #faf6dc;
+    border-bottom: 1px solid #e0d9b8;
+}
+
+.navbar-brand .logo {
+    font-family: Georgia, serif;
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #4a3524;
+}
+
+.navbar-links {
+    display: flex;
+    gap: 2rem;
+}
+
+    .navbar-links ::deep a {
+        text-decoration: none;
+        color: #4a3524;
+        font-family: Georgia, serif;
+        font-size: 1rem;
+        padding: 0.4rem 0.2rem;
+        border-bottom: 2px solid transparent;
+        transition: border-color 0.2s ease;
+    }
+
+        .navbar-links ::deep a:hover {
+            border-bottom-color: #8B6F47;
+        }
+
+        .navbar-links ::deep a.active {
+            border-bottom-color: #8B6F47;
+            font-weight: bold;
+        }
+
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .navbar-links {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
