@@ -9,5 +9,7 @@
         public float Width { get; set; }
         public float Height { get; set; }
         public float Confidence { get; set; }
+        public string? MaskImageBase64 { get; set; }
+        public float AreaPercentage { get; set; }
     }
 }

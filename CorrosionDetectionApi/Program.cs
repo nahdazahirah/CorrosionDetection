@@ -1,19 +1,13 @@
-// ==== Program.cs BACKEND (Web API) ====
-// Ini bukan file lengkap, tapi bagian yang perlu kamu TAMBAHKAN/SESUAIKAN
-// di Program.cs project Web API kamu.
-
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Daftarkan service AI kamu (sama seperti sebelumnya)
+// 1. Daftarkan service AI
 builder.Services.AddSingleton(new CorrosionDetection.Services.CorrosionDetectionService(
     Path.Combine(builder.Environment.ContentRootPath, "Models", "AI", "best.onnx")
 ));
 
 builder.Services.AddControllers();
 
-// 2. INI YANG PENTING: setup CORS supaya Blazor (beda port) boleh akses API ini.
-//    Ganti "https://localhost:5001" dengan port project Blazor kamu yang sebenarnya
-//    (cek di file launchSettings.json project Blazor).
+// 2. Setup CORS supaya Blazor (beda port) bisa akses API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorFrontend", policy =>
@@ -26,7 +20,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 3. Aktifkan CORS - urutannya PENTING, harus sebelum MapControllers()
+// 3. Aktifkan CORS
 app.UseCors("AllowBlazorFrontend");
 
 app.UseHttpsRedirection();

@@ -9,5 +9,7 @@
         public float Width { get; set; }   // lebar kotak
         public float Height { get; set; }  // tinggi kotak
         public float Confidence { get; set; } // seberapa yakin model (0.0 - 1.0)
+        public string? MaskImageBase64 { get; set; }       // mask biner, panjang = Width * Height
+        public float AreaPercentage { get; set; } // persentase area korosi dalam bbox ini
     }
 }

@@ -35,8 +35,15 @@
                     height:@(d.Height / originalHeight * 100)%;
                     border:2px solid red;
                     box-sizing:border-box;">
-                    <span style="background:red; color:white; font-size:11px; padding:1px 3px;">
-                        corrosion @((d.Confidence * 100).ToString("0.0"))%
+
+                    @if (!string.IsNullOrEmpty(d.MaskImageBase64))
+                    {
+                        <img src="data:image/png;base64,@d.MaskImageBase64"
+                             style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                    }
+
+                    <span style="background:red; color:white; font-size:11px; padding:1px 3px; position:relative; z-index:1;">
+                        corrosion @((d.Confidence * 100).ToString("0.0"))% — area: @(d.AreaPercentage.ToString("0.0"))%
                     </span>
                 </div>
             }
@@ -51,7 +58,7 @@
     private List<DetectionResult> detections = new();
     private bool isLoading = false;
     private string? errorMessage;
-    private float originalWidth = 1; // default 1 biar nggak divide-by-zero sebelum data masuk
+    private float originalWidth = 1;
     private float originalHeight = 1;
 
     private async Task OnFileSelected(InputFileChangeEventArgs e)
@@ -61,12 +68,10 @@
         detections.Clear();
         errorMessage = null;
 
-        // Tampilkan preview gambar di browser (base64, cuma buat ditampilkan)
         var buffer = new byte[file.Size];
         await file.OpenReadStream(maxAllowedSize: 10_000_000).ReadAsync(buffer);
         imageDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
 
-        // Kirim ke BACKEND (Web API terpisah) buat diproses
         using var content = new MultipartFormDataContent();
         using var fileContent = new ByteArrayContent(buffer);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
@@ -74,8 +79,6 @@
 
         try
         {
-            // GANTI base address ini sesuai alamat backend Web API kamu
-            // (diset di Program.cs Blazor, lihat Program-snippet.cs)
             var response = await Http.PostAsync("api/corrosion/detect", content);
 
             if (response.IsSuccessStatusCode)
@@ -84,8 +87,6 @@
                 if (result != null)
                 {
                     detections = result.Detections;
-                    // Ukuran gambar asli didapat LANGSUNG dari backend (bukan ditebak),
-                    // supaya perhitungan posisi kotak (%) di atas selalu akurat.
                     originalWidth = result.ImageWidth;
                     originalHeight = result.ImageHeight;
                 }
@@ -97,7 +98,6 @@
         }
         catch (System.Net.Http.HttpRequestException hre)
         {
-            // Common in dev when backend isn't running or blocked by CORS/SSL
             errorMessage = "Unable to reach backend API: " + hre.Message;
         }
         catch (Exception ex)
