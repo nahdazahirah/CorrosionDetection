@@ -1,5 +1,6 @@
 using CorrosionDetectionApi.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,5 +32,13 @@ app.UseCors("AllowBlazorFrontend");
 
 app.UseHttpsRedirection();
 app.MapControllers();
+
+// Apply any pending EF Core migrations on startup so the database is created/updated automatically.
+// Useful for development; for production consider more controlled migration deployment.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CorrosionDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();

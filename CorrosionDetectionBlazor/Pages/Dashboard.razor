@@ -9,87 +9,93 @@
 <div style="text-align:center; margin-top: 20px;">
     <h2>Dashboard Monitoring Korosi (Real-time Webcam)</h2>
 
-    <div style="margin-bottom: 10px;">
+    <div class="dashboard-controls">
         @if (!isCameraOn)
         {
-            <button class="btn btn-primary" @onclick="StartCamera">Mulai Kamera</button>
+            <button class="btn-mulai" @onclick="StartCamera">Mulai Kamera</button>
         }
         else
         {
-            <button class="btn btn-danger" @onclick="StopCamera">Hentikan Kamera</button>
+            <button class="btn-mulai btn-stop" @onclick="StopCamera">Hentikan Kamera</button>
         }
-        <span style="margin-left: 15px;">
-            Interval sampling:
+
+        <div class="interval-control">
+            <label>Interval sampling:</label>
             <select @bind="samplingIntervalSeconds" @bind:after="OnIntervalChanged">
                 <option value="3">3 detik</option>
                 <option value="5">5 detik</option>
                 <option value="10">10 detik</option>
             </select>
-        </span>
+        </div>
     </div>
 
-    <div style="position: relative; display: inline-block; border: 3px solid #333; border-radius: 6px; padding: 4px;">
-        <video id="webcamVideo" autoplay playsinline style="max-width: 640px; display:block;"></video>
-        <canvas id="webcamCanvas" style="display:none;"></canvas>
+    <div class="dashboard-main">
+        <div class="webcam-section">
+            <div class="webcam-frame">
+                <video id="webcamVideo" autoplay playsinline></video>
+                <canvas id="webcamCanvas" style="display:none;"></canvas>
 
-        @if (latestDetections.Count > 0)
-        {
-            @foreach (var d in latestDetections)
-            {
-                <div style="position:absolute;
-                    left:@(d.X / videoWidth * 100)%;
-                    top:@(d.Y / videoHeight * 100)%;
-                    width:@(d.Width / videoWidth * 100)%;
-                    height:@(d.Height / videoHeight * 100)%;
-                    border:2px solid red;
-                    box-sizing:border-box;">
-
-                    @if (!string.IsNullOrEmpty(d.MaskImageBase64))
+                @if (latestDetections.Count > 0)
+                {
+                    @foreach (var d in latestDetections)
                     {
-                        <img src="data:image/png;base64,@d.MaskImageBase64"
-                             style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
-                    }
+                        <div style="position:absolute;
+                            left:@(d.X / videoWidth * 100)%;
+                            top:@(d.Y / videoHeight * 100)%;
+                            width:@(d.Width / videoWidth * 100)%;
+                            height:@(d.Height / videoHeight * 100)%;
+                            border:2px solid red;
+                            box-sizing:border-box;">
 
-                    <span style="background:red; color:white; font-size:11px; padding:1px 3px; position:relative; z-index:1;">
-                        @(d.AreaPercentage.ToString("0.0"))%
-                    </span>
-                </div>
+                            @if (!string.IsNullOrEmpty(d.MaskImageBase64))
+                            {
+                                <img src="data:image/png;base64,@d.MaskImageBase64"
+                                     style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                            }
+
+                            <span style="background:red; color:white; font-size:11px; padding:1px 3px; position:relative; z-index:1;">
+                                @(d.AreaPercentage.ToString("0.0"))%
+                            </span>
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (isProcessing)
+            {
+                <p><em>Memproses frame...</em></p>
             }
-        }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p style="color:red;">@errorMessage</p>
+            }
+        </div>
+
+        <div class="history-section">
+            <h3>Histori Deteksi</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Jumlah</th>
+                        <th>Area (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in history.OrderByDescending(h => h.Timestamp).Take(20))
+                    {
+                        <tr>
+                            <td>@log.Timestamp.ToString("HH:mm:ss")</td>
+                            <td>@log.DetectionCount</td>
+                            <td>@log.MaxAreaPercentage.ToString("0.0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    @if (isProcessing)
-    {
-        <p><em>Memproses frame...</em></p>
-    }
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <p style="color:red;">@errorMessage</p>
-    }
-
-    <hr />
-
-    <h3>Histori Deteksi</h3>
-    <table style="margin: 0 auto; border-collapse: collapse;" border="1" cellpadding="6">
-        <thead>
-            <tr>
-                <th>Waktu</th>
-                <th>Jumlah Deteksi</th>
-                <th>Area Terbesar (%)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var log in history.OrderByDescending(h => h.Timestamp).Take(20))
-            {
-                <tr>
-                    <td>@log.Timestamp.ToString("HH:mm:ss")</td>
-                    <td>@log.DetectionCount</td>
-                    <td>@log.MaxAreaPercentage.ToString("0.0")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
 </div>
 
 @code {
