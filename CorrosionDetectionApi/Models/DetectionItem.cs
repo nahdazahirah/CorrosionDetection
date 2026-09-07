@@ -1,11 +1,10 @@
 ﻿namespace CorrosionDetection.Models
 {
-    // Ini "kontrak data" antara backend dan frontend.
-    // Backend isi objek ini, lalu dikirim sebagai JSON ke frontend.
-    public class DetectionResult
+    public class DetectionItem
     {
         public int Id { get; set; }
         public int SessionId { get; set; }
+
         public float X { get; set; }
         public float Y { get; set; }
         public float Width { get; set; }

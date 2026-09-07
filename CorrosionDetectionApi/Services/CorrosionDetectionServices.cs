@@ -18,7 +18,7 @@ namespace CorrosionDetection.Services
 
         // Model YOLOv8n-seg 1 kelas: output0 = [1, 37, 8400] -> 4 bbox + 1 class score + 32 mask coeff
         private const int NumMaskCoeffs = 32;
-        private const int ProtoSize = 160; // ukuran prototype mask (160x160)
+        private const int ProtoSize = 160;
 
         public CorrosionDetectionService(string modelPath)
         {
