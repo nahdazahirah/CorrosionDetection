@@ -73,7 +73,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var s in dayGroup.OrderByDescending(x => x.Timestamp))
+                        @foreach (var s in ApplySort(dayGroup))
                         {
                             <tr class="data-row">
                                 <td>@s.Timestamp.ToString("HH:mm:ss")</td>
@@ -190,5 +190,23 @@
         public float Confidence { get; set; }
         public float AreaPercentage { get; set; }
         public string? MaskImageBase64 { get; set; }
+    }
+
+    private IEnumerable<SessionDto> ApplySort(IEnumerable<SessionDto> items)
+    {
+        bool desc = sortDescStr == "true";
+
+        return sortBy switch
+        {
+            "area" => desc
+                ? items.OrderByDescending(x => x.MaxAreaPercentage)
+                : items.OrderBy(x => x.MaxAreaPercentage),
+            "count" => desc
+                ? items.OrderByDescending(x => x.DetectionCount)
+                : items.OrderBy(x => x.DetectionCount),
+            _ => desc
+                ? items.OrderByDescending(x => x.Timestamp)
+                : items.OrderBy(x => x.Timestamp),
+        };
     }
 }
