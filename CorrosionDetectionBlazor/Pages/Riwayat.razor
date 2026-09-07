@@ -1,5 +1,194 @@
-﻿<h3>Riwayat</h3>
+﻿@page "/riwayat"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<div class="riwayat-page">
+    <h2>Riwayat Deteksi Korosi</h2>
+    <p class="subtitle">Rekaman hasil deteksi dari seluruh sesi pemindaian, dikelompokkan per hari.</p>
+
+    <div class="toolbar">
+        <div class="field">
+            <label>Dari tanggal</label>
+            <input type="date" @bind="fromDate" />
+        </div>
+        <div class="field">
+            <label>Sampai tanggal</label>
+            <input type="date" @bind="toDate" />
+        </div>
+        <div class="field">
+            <label>Sumber</label>
+            <select @bind="sourceType">
+                <option value="">Semua</option>
+                <option value="upload">Upload</option>
+                <option value="webcam">Webcam</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Urutkan</label>
+            <select @bind="sortBy">
+                <option value="date">Tanggal/Waktu</option>
+                <option value="area">Luas Area Terbesar</option>
+                <option value="count">Jumlah Deteksi</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Arah</label>
+            <select @bind="sortDescStr">
+                <option value="true">Terbaru/Terbesar dulu</option>
+                <option value="false">Terlama/Terkecil dulu</option>
+            </select>
+        </div>
+        <button class="apply-btn" @onclick="LoadHistory">Terapkan</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-msg">Memuat riwayat...</p>
+    }
+    else if (sessions.Count == 0)
+    {
+        <p class="status-msg">Belum ada riwayat deteksi untuk filter ini.</p>
+    }
+    else
+    {
+        @foreach (var dayGroup in sessions.GroupBy(s => s.Timestamp.Date).OrderByDescending(g => g.Key))
+        {
+            <div class="day-section">
+                <div class="day-heading">
+                    <span class="day-num">@dayGroup.Key.ToString("dd")</span>
+                    <div class="day-meta">
+                        <span class="day-weekday">@dayGroup.Key.ToString("dddd", new System.Globalization.CultureInfo("id-ID"))</span>
+                        <span class="day-month">@dayGroup.Key.ToString("MMMM yyyy", new System.Globalization.CultureInfo("id-ID"))</span>
+                    </div>
+                </div>
+
+                <table class="history-table riwayat-table">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Sumber</th>
+                            <th>Jumlah Deteksi</th>
+                            <th>Area Terbesar</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in dayGroup.OrderByDescending(x => x.Timestamp))
+                        {
+                            <tr class="data-row">
+                                <td>@s.Timestamp.ToString("HH:mm:ss")</td>
+                                <td><span class="badge-source">@s.SourceType</span></td>
+                                <td>@s.DetectionCount</td>
+                                <td>
+                                    <span class="area-value @(s.MaxAreaPercentage > 20 ? "high" : "")">
+                                        @s.MaxAreaPercentage.ToString("0.0")%
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="detail-btn" @onclick="() => ToggleExpand(s.Id)">
+                                        @(expandedId == s.Id ? "Tutup" : "Lihat detail")
+                                    </button>
+                                </td>
+                            </tr>
+                            @if (expandedId == s.Id)
+                            {
+                                <tr>
+                                    <td colspan="5" style="padding:0;">
+                                        <div class="detail-panel">
+                                            <strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px
+                                            <ul class="detail-list">
+                                                @foreach (var item in s.Items)
+                                                {
+                                                    <li>
+                                                        Posisi (@item.X.ToString("0"), @item.Y.ToString("0")) ·
+                                                        ukuran @item.Width.ToString("0")×@item.Height.ToString("0") px ·
+                                                        confidence @((item.Confidence * 100).ToString("0.0"))% ·
+                                                        area @item.AreaPercentage.ToString("0.0")%
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
 
 @code {
+    private List<SessionDto> sessions = new();
+    private bool isLoading = false;
+    private int? expandedId = null;
 
+    private DateTime? fromDate;
+    private DateTime? toDate;
+    private string sourceType = "";
+    private string sortBy = "date";
+    private string sortDescStr = "true";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistory();
+    }
+
+    private async Task LoadHistory()
+    {
+        isLoading = true;
+        expandedId = null;
+
+        var query = new List<string>();
+        if (fromDate.HasValue) query.Add($"fromDate={fromDate:yyyy-MM-dd}");
+        if (toDate.HasValue) query.Add($"toDate={toDate:yyyy-MM-dd}");
+        if (!string.IsNullOrEmpty(sourceType)) query.Add($"sourceType={sourceType}");
+        query.Add($"sortBy={sortBy}");
+        query.Add($"sortDesc={sortDescStr}");
+
+        var url = "api/corrosion/history?" + string.Join("&", query);
+
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<SessionDto>>(url);
+            sessions = result ?? new();
+        }
+        catch
+        {
+            sessions = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ToggleExpand(int id)
+    {
+        expandedId = expandedId == id ? null : id;
+    }
+
+    private class SessionDto
+    {
+        public int Id { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string SourceType { get; set; } = "";
+        public int ImageWidth { get; set; }
+        public int ImageHeight { get; set; }
+        public int DetectionCount { get; set; }
+        public float MaxAreaPercentage { get; set; }
+        public List<ItemDto> Items { get; set; } = new();
+    }
+
+    private class ItemDto
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public float Confidence { get; set; }
+        public float AreaPercentage { get; set; }
+        public string? MaskImageBase64 { get; set; }
+    }
 }

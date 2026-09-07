@@ -168,7 +168,8 @@
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
             content.Add(fileContent, "image", "frame.png");
 
-            var response = await Http.PostAsync("api/corrosion/detect", content);
+            var response = await Http.PostAsync(
+                "api/corrosion/detect?sourceType=webcam", content);
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();

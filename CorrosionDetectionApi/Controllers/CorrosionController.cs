@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CorrosionDetection.Models;
 using CorrosionDetection.Services;
-using CorrosionDetection.Models;
 using CorrosionDetectionApi.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CorrosionDetection.Api.Controllers
 {
@@ -20,7 +21,9 @@ namespace CorrosionDetection.Api.Controllers
 
         // POST api/corrosion/detect
         [HttpPost("detect")]
-        public async Task<IActionResult> Detect(IFormFile image)
+        public async Task<IActionResult> Detect(
+            IFormFile image,
+            [FromQuery] string sourceType = "upload")
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Tidak ada gambar yang diupload.");
@@ -31,7 +34,7 @@ namespace CorrosionDetection.Api.Controllers
             // Simpan hasil deteksi ke database
             var session = new DetectionSession
             {
-                SourceType = "upload",
+                SourceType = sourceType == "webcam" ? "webcam" : "upload",
                 ImageWidth = response.ImageWidth,
                 ImageHeight = response.ImageHeight,
                 DetectionCount = response.Detections.Count,
@@ -55,23 +58,64 @@ namespace CorrosionDetection.Api.Controllers
 
         // GET api/corrosion/history
         [HttpGet("history")]
-        public async Task<IActionResult> GetHistory()
+        public async Task<IActionResult> GetHistory(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] string? sourceType,
+            [FromQuery] string sortBy = "date",
+            [FromQuery] bool sortDesc = true)
         {
-            var sessions = await Task.FromResult(
-                _dbContext.DetectionSessions
-                    .OrderByDescending(s => s.Timestamp)
-                    .Take(50)
-                    .Select(s => new
-                    {
-                        s.Id,
-                        s.Timestamp,
-                        s.SourceType,
-                        s.DetectionCount
-                    })
-                    .ToList()
-            );
+            var query = _dbContext.DetectionSessions
+                .Include(s => s.Items)
+                .AsQueryable();
 
-            return Ok(sessions);
+            if (fromDate.HasValue)
+                query = query.Where(s => s.Timestamp >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(s => s.Timestamp <= toDate.Value.AddDays(1));
+
+            if (!string.IsNullOrEmpty(sourceType))
+                query = query.Where(s => s.SourceType == sourceType);
+
+            // Sort
+            query = sortBy switch
+            {
+                "area" => sortDesc
+                    ? query.OrderByDescending(s => s.Items.Any() ? s.Items.Max(i => i.AreaPercentage) : 0)
+                    : query.OrderBy(s => s.Items.Any() ? s.Items.Max(i => i.AreaPercentage) : 0),
+                "count" => sortDesc
+                    ? query.OrderByDescending(s => s.DetectionCount)
+                    : query.OrderBy(s => s.DetectionCount),
+                _ => sortDesc
+                    ? query.OrderByDescending(s => s.Timestamp)
+                    : query.OrderBy(s => s.Timestamp)
+            };
+
+            var sessions = await query.Take(200).ToListAsync();
+
+            var result = sessions.Select(s => new
+            {
+                s.Id,
+                s.Timestamp,
+                s.SourceType,
+                s.ImageWidth,
+                s.ImageHeight,
+                s.DetectionCount,
+                MaxAreaPercentage = s.Items.Any() ? s.Items.Max(i => i.AreaPercentage) : 0,
+                Items = s.Items.Select(i => new
+                {
+                    i.X,
+                    i.Y,
+                    i.Width,
+                    i.Height,
+                    i.Confidence,
+                    i.AreaPercentage,
+                    i.MaskImageBase64
+                })
+            });
+
+            return Ok(result);
         }
     }
 }

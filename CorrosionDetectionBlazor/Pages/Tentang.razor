@@ -1,5 +1,65 @@
-﻿<h3>Tentang</h3>
+﻿@page "/tentang"
 
-@code {
+<div class="tentang-page">
+    <div class="hero">
+        <h2>Corrosion Detection System</h2>
+        <p class="hero-desc">
+            Sistem deteksi dan segmentasi korosi berbasis computer vision, dikembangkan sebagai
+            bagian dari program magang MBKM di PT Pertamina Refinery Unit II Kota Dumai.
+        </p>
+    </div>
 
-}
+    <div class="section">
+        <h3>Cara Kerja</h3>
+        <p>
+            Aplikasi ini menggunakan model deep learning YOLOv8n-seg yang dilatih untuk mengenali
+            area korosi pada gambar peralatan industri. Setiap gambar yang diunggah atau ditangkap
+            dari webcam akan dianalisis, menghasilkan bounding box, mask segmentasi, dan persentase
+            luas area yang terindikasi korosi.
+        </p>
+    </div>
+
+    <div class="section">
+        <h3>Fitur</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="feature-num">01</span>
+                <div>
+                    <strong>Deteksi dari Foto</strong>
+                    <p>Unggah gambar untuk mendapatkan hasil deteksi dan segmentasi korosi secara instan.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-num">02</span>
+                <div>
+                    <strong>Monitoring Real-time</strong>
+                    <p>Pemantauan langsung melalui webcam dengan pengambilan sampel gambar secara berkala.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-num">03</span>
+                <div>
+                    <strong>Riwayat Deteksi</strong>
+                    <p>Seluruh hasil deteksi tersimpan dan dapat difilter berdasarkan tanggal, sumber, dan luas area.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Teknologi yang Digunakan</h3>
+        <div class="tech-badges">
+            <span class="tech-badge">YOLOv8n-seg</span>
+            <span class="tech-badge">ONNX Runtime</span>
+            <span class="tech-badge">ASP.NET Core Web API</span>
+            <span class="tech-badge">Blazor WebAssembly</span>
+            <span class="tech-badge">Entity Framework Core</span>
+            <span class="tech-badge">SQL Server</span>
+        </div>
+    </div>
+
+    <div class="footer-credit">
+        <p>Dikembangkan oleh <strong>Nahda Zahirah dan Alya Kinanti</strong> — Teknik Informatika, Universitas Riau</p>
+        <p class="footer-sub">Program MBKM Magang Mandiri, PT Pertamina Refinery Unit II Kota Dumai</p>
+    </div>
+</div>
