@@ -1,13 +1,16 @@
-﻿using CorrosionDetection.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CorrosionDetection.Services;
+using CorrosionDetection.Models;
 using CorrosionDetectionApi.Data;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace CorrosionDetection.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CorrosionController : ControllerBase
     {
         private readonly CorrosionDetectionService _detectionService;

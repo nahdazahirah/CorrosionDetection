@@ -1,0 +1,85 @@
+﻿@page "/login"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject CorrosionDetectionBlazor.Auth.CustomAuthStateProvider AuthStateProvider
+
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Masuk</h2>
+            <p>Corrosion Detection System</p>
+        </div>
+
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" @bind="loginModel.Email" placeholder="nama@contoh.com" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" @bind="loginModel.Password" placeholder="••••••••" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="error-msg">@errorMessage</p>
+            }
+
+            <button type="submit" class="login-btn" disabled="@isLoading">
+                @(isLoading ? "Memproses..." : "Masuk")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    private class LoginModel
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+                if (result != null)
+                {
+                    await AuthStateProvider.MarkUserAsAuthenticated(result.Token);
+                    Nav.NavigateTo("/");
+                }
+            }
+            else
+            {
+                errorMessage = "Email atau password salah.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Tidak dapat terhubung ke server.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class LoginResult
+    {
+        public string Token { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public List<string> Roles { get; set; } = new();
+    }
+}
