@@ -1,6 +1,7 @@
 using CorrosionDetectionApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddSingleton(new CorrosionDetection.Services.CorrosionDetection
 ));
 
 builder.Services.AddControllers();
+builder.Services.AddOpenApi();
 
 // 2. Setup CORS supaya Blazor (beda port) bisa akses API
 builder.Services.AddCors(options =>
@@ -26,6 +28,12 @@ builder.Services.AddDbContext<CorrosionDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())    // TAMBAHKAN — blok ini setelah var app = builder.Build();
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 // 3. Aktifkan CORS
 app.UseCors("AllowBlazorFrontend");
