@@ -25,7 +25,7 @@ namespace CorrosionDetectionBlazor.Auth
             }
             catch
             {
-                return _anonymous; // JS belum siap (misal saat prerender)
+                return _anonymous;
             }
 
             if (string.IsNullOrEmpty(token))

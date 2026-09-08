@@ -3,9 +3,36 @@
         <span class="logo">CorrosionDetect</span>
     </div>
     <div class="navbar-links">
-        <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
-        <NavLink href="/corrosion">Deteksi Korosi</NavLink>
+        <NavLink href="/">Home</NavLink>
+
+        <AuthorizeView Roles="Admin,Operator">
+            <NavLink href="/corrosion">Deteksi Korosi</NavLink>
+        </AuthorizeView>
+
         <NavLink href="/riwayat">Riwayat</NavLink>
+
+        <AuthorizeView Roles="Admin">
+            <NavLink href="/kelola-akun">Kelola Akun</NavLink>
+        </AuthorizeView>
+
         <NavLink href="/tentang">Tentang</NavLink>
+
+        <AuthorizeView>
+            <Authorized>
+                <span>@context.User.FindFirst("FullName")?.Value ?? context.User.Identity?.Name</span>
+                <button @onclick="Logout">Keluar</button>
+            </Authorized>
+        </AuthorizeView>
     </div>
 </nav>
+
+@code {
+    [Inject] private CorrosionDetectionBlazor.Auth.CustomAuthStateProvider AuthStateProvider { get; set; } = default!;
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private async Task Logout()
+    {
+        await AuthStateProvider.MarkUserAsLoggedOut();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

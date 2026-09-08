@@ -60,28 +60,26 @@ namespace CorrosionDetection.Api.Controllers
         }
 
         // GET api/corrosion/history
+        [Authorize]
         [HttpGet("history")]
         public async Task<IActionResult> GetHistory(
-            [FromQuery] DateTime? fromDate,
-            [FromQuery] DateTime? toDate,
-            [FromQuery] string? sourceType,
-            [FromQuery] string sortBy = "date",
-            [FromQuery] bool sortDesc = true)
+           [FromQuery] DateTime? fromDate,
+           [FromQuery] DateTime? toDate,
+           [FromQuery] string? sourceType,
+           [FromQuery] string sortBy = "date",
+           [FromQuery] bool sortDesc = true)
         {
+            var effectiveFrom = fromDate ?? DateTime.Today;
+            var effectiveTo = toDate ?? DateTime.Today;
+
             var query = _dbContext.DetectionSessions
                 .Include(s => s.Items)
+                .Where(s => s.Timestamp >= effectiveFrom && s.Timestamp < effectiveTo.AddDays(1))
                 .AsQueryable();
-
-            if (fromDate.HasValue)
-                query = query.Where(s => s.Timestamp >= fromDate.Value);
-
-            if (toDate.HasValue)
-                query = query.Where(s => s.Timestamp <= toDate.Value.AddDays(1));
 
             if (!string.IsNullOrEmpty(sourceType))
                 query = query.Where(s => s.SourceType == sourceType);
 
-            // Sort
             query = sortBy switch
             {
                 "area" => sortDesc
@@ -119,6 +117,20 @@ namespace CorrosionDetection.Api.Controllers
             });
 
             return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("history/{id}")]
+        public async Task<IActionResult> DeleteSession(int id)
+        {
+            var session = await _dbContext.DetectionSessions.FindAsync(id);
+            if (session == null)
+                return NotFound();
+
+            _dbContext.DetectionSessions.Remove(session);
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

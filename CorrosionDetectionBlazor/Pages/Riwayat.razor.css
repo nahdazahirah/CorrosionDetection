@@ -68,6 +68,40 @@
     font-style: italic;
     padding: 20px 0;
 }
+.today-btn {
+    background-color: transparent;
+    border: 1px solid #8B5E3C;
+    color: #8B5E3C;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+    .today-btn:hover {
+        background-color: #eee4bd;
+    }
+
+.action-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.delete-btn {
+    background-color: #a94442;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+.delete-btn:hover {
+    background-color: #8b3532;
+}
 
 /* Day section */
 .day-section {

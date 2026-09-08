@@ -1,0 +1,148 @@
+﻿.akun-page {
+    font-family: Georgia, serif;
+    color: #4a3524;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+}
+
+.subtitle {
+    color: #7a6a52;
+    font-size: 0.9rem;
+    margin: 0 0 24px;
+}
+
+.form-card {
+    background-color: #eee4bd;
+    border: 1px solid #c9bd94;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+}
+
+    .form-card h3 {
+        margin: 0 0 14px;
+        font-size: 1rem;
+    }
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.field {
+    flex: 1;
+    min-width: 180px;
+}
+
+    .field label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .field input, .field select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #c9bd94;
+        font-family: Georgia, serif;
+        box-sizing: border-box;
+    }
+
+.error-msg {
+    color: #a94442;
+    font-size: 0.85rem;
+    margin: 4px 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.save-btn {
+    background-color: #8B5E3C;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+    .save-btn:hover {
+        background-color: #6f4a2f;
+    }
+
+.cancel-btn {
+    background: none;
+    border: 1px solid #c9bd94;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+.akun-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .akun-table th, .akun-table td {
+        border-bottom: 1px solid #e0d9b8;
+        padding: 10px 8px;
+        text-align: left;
+    }
+
+.role-badge {
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.role-admin {
+    background-color: #f0d9d9;
+    color: #a94442;
+}
+
+.role-operator {
+    background-color: #d9e8d9;
+    color: #3a6b3a;
+}
+
+.role-viewer {
+    background-color: #eee4bd;
+    color: #6f4a2f;
+}
+
+.action-cell {
+    display: flex;
+    gap: 6px;
+}
+
+.edit-btn {
+    background: none;
+    border: 1px solid #c9bd94;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}
+
+.delete-btn {
+    background-color: #a94442;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: Georgia, serif;
+}

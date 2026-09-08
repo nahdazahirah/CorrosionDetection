@@ -1,0 +1,181 @@
+﻿@page "/kelola-akun"
+@attribute [Authorize(Roles = "Admin")]
+@using System.Net.Http.Json
+
+<div class="akun-page">
+    <h2>Kelola Akun</h2>
+    <p class="subtitle">Tambah, ubah, atau hapus akun pengguna sistem.</p>
+
+    <div class="form-card">
+        <h3>@(editingId == null ? "Tambah Akun Baru" : "Ubah Akun")</h3>
+        <div class="form-row">
+            <div class="field">
+                <label>Nama Lengkap</label>
+                <input @bind="formModel.FullName" />
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input @bind="formModel.Email" disabled="@(editingId != null)" />
+            </div>
+        </div>
+        <div class="form-row">
+            @if (editingId == null)
+            {
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" @bind="formModel.Password" />
+                </div>
+            }
+            <div class="field">
+                <label>Role</label>
+                <select @bind="formModel.Role">
+                    <option value="Admin">Admin</option>
+                    <option value="Operator">Operator</option>
+                    <option value="Viewer">Viewer</option>
+                </select>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(formError))
+        {
+            <p class="error-msg">@formError</p>
+        }
+
+        <div class="form-actions">
+            <button class="save-btn" @onclick="SaveUser">@(editingId == null ? "Tambah" : "Simpan")</button>
+            @if (editingId != null)
+            {
+                <button class="cancel-btn" @onclick="CancelEdit">Batal</button>
+            }
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-msg">Memuat data akun...</p>
+    }
+    else
+    {
+        <table class="akun-table">
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in users)
+                {
+                    <tr>
+                        <td>@u.FullName</td>
+                        <td>@u.Email</td>
+                        <td><span class="role-badge role-@u.Role.ToLower()">@u.Role</span></td>
+                        <td class="action-cell">
+                            <button class="edit-btn" @onclick="() => StartEdit(u)">Ubah</button>
+                            <button class="delete-btn" @onclick="() => DeleteUser(u.Id)">Hapus</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Inject] private HttpClient Http { get; set; } = default!;
+
+    private List<UserDto> users = new();
+    private bool isLoading = false;
+    private string? editingId = null;
+    private string? formError;
+    private FormModel formModel = new();
+
+    protected override async Task OnInitializedAsync() => await LoadUsers();
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<UserDto>>("api/users");
+            users = result ?? new();
+        }
+        catch { users = new(); }
+        finally { isLoading = false; }
+    }
+
+    private void StartEdit(UserDto u)
+    {
+        editingId = u.Id;
+        formModel = new FormModel { FullName = u.FullName, Email = u.Email, Role = u.Role };
+        formError = null;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        formModel = new();
+        formError = null;
+    }
+
+    private async Task SaveUser()
+    {
+        formError = null;
+
+        if (editingId == null)
+        {
+            var response = await Http.PostAsJsonAsync("api/users", formModel);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ErrorDto>();
+                formError = err?.Message ?? "Gagal menambah akun.";
+                return;
+            }
+        }
+        else
+        {
+            var response = await Http.PutAsJsonAsync($"api/users/{editingId}", formModel);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ErrorDto>();
+                formError = err?.Message ?? "Gagal memperbarui akun.";
+                return;
+            }
+        }
+
+        CancelEdit();
+        await LoadUsers();
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        var response = await Http.DeleteAsync($"api/users/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            users.RemoveAll(u => u.Id == id);
+        }
+    }
+
+    private class UserDto
+    {
+        public string Id { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string FullName { get; set; } = "";
+        public string Role { get; set; } = "";
+    }
+
+    private class FormModel
+    {
+        public string FullName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string Role { get; set; } = "Viewer";
+    }
+
+    private class ErrorDto
+    {
+        public string Message { get; set; } = "";
+    }
+}

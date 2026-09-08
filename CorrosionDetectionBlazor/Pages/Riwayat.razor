@@ -1,11 +1,10 @@
 ﻿@page "/riwayat"
 @attribute [Authorize]
 @using System.Net.Http.Json
-@inject HttpClient Http
 
 <div class="riwayat-page">
     <h2>Riwayat Deteksi Korosi</h2>
-    <p class="subtitle">Rekaman hasil deteksi dari seluruh sesi pemindaian, dikelompokkan per hari.</p>
+    <p class="subtitle">Menampilkan data hari ini. Gunakan filter untuk melihat tanggal lain.</p>
 
     <div class="toolbar">
         <div class="field">
@@ -32,14 +31,8 @@
                 <option value="count">Jumlah Deteksi</option>
             </select>
         </div>
-        <div class="field">
-            <label>Arah</label>
-            <select @bind="sortDescStr">
-                <option value="true">Terbaru/Terbesar dulu</option>
-                <option value="false">Terlama/Terkecil dulu</option>
-            </select>
-        </div>
         <button class="apply-btn" @onclick="LoadHistory">Terapkan</button>
+        <button class="today-btn" @onclick="ResetToToday">Hari Ini</button>
     </div>
 
     @if (isLoading)
@@ -48,92 +41,91 @@
     }
     else if (sessions.Count == 0)
     {
-        <p class="status-msg">Belum ada riwayat deteksi untuk filter ini.</p>
+        <p class="status-msg">Belum ada riwayat deteksi untuk rentang ini.</p>
     }
     else
     {
-        @foreach (var dayGroup in sessions.GroupBy(s => s.Timestamp.Date).OrderByDescending(g => g.Key))
-        {
-            <div class="day-section">
-                <div class="day-heading">
-                    <span class="day-num">@dayGroup.Key.ToString("dd")</span>
-                    <div class="day-meta">
-                        <span class="day-weekday">@dayGroup.Key.ToString("dddd", new System.Globalization.CultureInfo("id-ID"))</span>
-                        <span class="day-month">@dayGroup.Key.ToString("MMMM yyyy", new System.Globalization.CultureInfo("id-ID"))</span>
-                    </div>
-                </div>
-
-                <table class="history-table riwayat-table">
-                    <thead>
+        <table class="riwayat-table">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Waktu</th>
+                    <th>Sumber</th>
+                    <th>Jumlah Deteksi</th>
+                    <th>Area Terbesar</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in sessions)
+                {
+                    <tr class="data-row">
+                        <td>@s.Timestamp.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("id-ID"))</td>
+                        <td>@s.Timestamp.ToString("HH:mm:ss")</td>
+                        <td><span class="badge-source">@s.SourceType</span></td>
+                        <td>@s.DetectionCount</td>
+                        <td>
+                            <span class="area-value @(s.MaxAreaPercentage > 20 ? "high" : "")">
+                                @s.MaxAreaPercentage.ToString("0.0")%
+                            </span>
+                        </td>
+                        <td class="action-cell">
+                            <button class="detail-btn" @onclick="() => ToggleExpand(s.Id)">
+                                @(expandedId == s.Id ? "Tutup" : "Lihat")
+                            </button>
+                            <AuthorizeView Roles="Admin" Context="authCtx">
+                                <Authorized>
+                                    <button class="delete-btn" @onclick="() => DeleteSession(s.Id)">Hapus</button>
+                                </Authorized>
+                            </AuthorizeView>
+                        </td>
+                    </tr>
+                    @if (expandedId == s.Id)
+                    {
                         <tr>
-                            <th>Waktu</th>
-                            <th>Sumber</th>
-                            <th>Jumlah Deteksi</th>
-                            <th>Area Terbesar</th>
-                            <th></th>
+                            <td colspan="6" style="padding:0;">
+                                <div class="detail-panel">
+                                    <strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px
+                                    <ul class="detail-list">
+                                        @foreach (var item in s.Items)
+                                        {
+                                            <li>
+                                                Posisi (@item.X.ToString("0"), @item.Y.ToString("0")) ·
+                                                ukuran @item.Width.ToString("0")×@item.Height.ToString("0") px ·
+                                                confidence @((item.Confidence * 100).ToString("0.0"))% ·
+                                                area @item.AreaPercentage.ToString("0.0")%
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var s in ApplySort(dayGroup))
-                        {
-                            <tr class="data-row">
-                                <td>@s.Timestamp.ToString("HH:mm:ss")</td>
-                                <td><span class="badge-source">@s.SourceType</span></td>
-                                <td>@s.DetectionCount</td>
-                                <td>
-                                    <span class="area-value @(s.MaxAreaPercentage > 20 ? "high" : "")">
-                                        @s.MaxAreaPercentage.ToString("0.0")%
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="detail-btn" @onclick="() => ToggleExpand(s.Id)">
-                                        @(expandedId == s.Id ? "Tutup" : "Lihat detail")
-                                    </button>
-                                </td>
-                            </tr>
-                            @if (expandedId == s.Id)
-                            {
-                                <tr>
-                                    <td colspan="5" style="padding:0;">
-                                        <div class="detail-panel">
-                                            <strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px
-                                            <ul class="detail-list">
-                                                @foreach (var item in s.Items)
-                                                {
-                                                    <li>
-                                                        Posisi (@item.X.ToString("0"), @item.Y.ToString("0")) ·
-                                                        ukuran @item.Width.ToString("0")×@item.Height.ToString("0") px ·
-                                                        confidence @((item.Confidence * 100).ToString("0.0"))% ·
-                                                        area @item.AreaPercentage.ToString("0.0")%
-                                                    </li>
-                                                }
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+                    }
+                }
+            </tbody>
+        </table>
     }
 </div>
 
 @code {
+    [Inject] private HttpClient Http { get; set; } = default!;
+
     private List<SessionDto> sessions = new();
     private bool isLoading = false;
     private int? expandedId = null;
 
-    private DateTime? fromDate;
-    private DateTime? toDate;
+    private DateTime? fromDate = DateTime.Today;
+    private DateTime? toDate = DateTime.Today;
     private string sourceType = "";
     private string sortBy = "date";
-    private string sortDescStr = "true";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadHistory();
+
+    private void ResetToToday()
     {
-        await LoadHistory();
+        fromDate = DateTime.Today;
+        toDate = DateTime.Today;
+        _ = LoadHistory();
     }
 
     private async Task LoadHistory()
@@ -146,29 +138,28 @@
         if (toDate.HasValue) query.Add($"toDate={toDate:yyyy-MM-dd}");
         if (!string.IsNullOrEmpty(sourceType)) query.Add($"sourceType={sourceType}");
         query.Add($"sortBy={sortBy}");
-        query.Add($"sortDesc={sortDescStr}");
-
-        var url = "api/corrosion/history?" + string.Join("&", query);
+        query.Add("sortDesc=true");
 
         try
         {
-            var result = await Http.GetFromJsonAsync<List<SessionDto>>(url);
+            var result = await Http.GetFromJsonAsync<List<SessionDto>>(
+                "api/corrosion/history?" + string.Join("&", query));
             sessions = result ?? new();
         }
-        catch
+        catch { sessions = new(); }
+        finally { isLoading = false; }
+    }
+
+    private async Task DeleteSession(int id)
+    {
+        var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
+        if (response.IsSuccessStatusCode)
         {
-            sessions = new();
-        }
-        finally
-        {
-            isLoading = false;
+            sessions.RemoveAll(s => s.Id == id);
         }
     }
 
-    private void ToggleExpand(int id)
-    {
-        expandedId = expandedId == id ? null : id;
-    }
+    private void ToggleExpand(int id) => expandedId = expandedId == id ? null : id;
 
     private class SessionDto
     {
@@ -191,23 +182,5 @@
         public float Confidence { get; set; }
         public float AreaPercentage { get; set; }
         public string? MaskImageBase64 { get; set; }
-    }
-
-    private IEnumerable<SessionDto> ApplySort(IEnumerable<SessionDto> items)
-    {
-        bool desc = sortDescStr == "true";
-
-        return sortBy switch
-        {
-            "area" => desc
-                ? items.OrderByDescending(x => x.MaxAreaPercentage)
-                : items.OrderBy(x => x.MaxAreaPercentage),
-            "count" => desc
-                ? items.OrderByDescending(x => x.DetectionCount)
-                : items.OrderBy(x => x.DetectionCount),
-            _ => desc
-                ? items.OrderByDescending(x => x.Timestamp)
-                : items.OrderBy(x => x.Timestamp),
-        };
     }
 }
