@@ -199,3 +199,31 @@
 .detail-list li {
     margin-bottom: 4px;
 }
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+    .history-table th,
+    .history-table td {
+        border: 1px solid #c9bd94;
+        padding: 10px 14px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .history-table th {
+        background-color: #eee4bd;
+        color: #4a3524;
+        font-weight: bold;
+    }
+
+    .history-table td {
+        background-color: #fffdf5;
+    }
+
+.data-row:hover td {
+    background-color: #f5eecb;
+}

@@ -1,9 +1,12 @@
 ﻿<nav class="navbar">
+
     <div class="navbar-brand">
         <span class="logo">CorrosionDetect</span>
     </div>
+
+
     <div class="navbar-links">
-        <NavLink href="/">Home</NavLink>
+        <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
 
         <AuthorizeView Roles="Admin,Operator">
             <NavLink href="/corrosion">Deteksi Korosi</NavLink>
@@ -11,18 +14,19 @@
 
         <NavLink href="/riwayat">Riwayat</NavLink>
 
-        <AuthorizeView Roles="Admin">
-            <NavLink href="/kelola-akun">Kelola Akun</NavLink>
-        </AuthorizeView>
-
         <NavLink href="/tentang">Tentang</NavLink>
 
-        <AuthorizeView>
+        <AuthorizeView Context="authCtx">
             <Authorized>
-                <span>@context.User.FindFirst("FullName")?.Value ?? context.User.Identity?.Name</span>
-                <button @onclick="Logout">Keluar</button>
+                <NavLink href="/profile" class="profile-link">
+                    @(authCtx.User.Identity?.Name ?? "Profil")
+                </NavLink>
             </Authorized>
+            <NotAuthorized>
+                <NavLink href="/login">Masuk</NavLink>
+            </NotAuthorized>
         </AuthorizeView>
+
     </div>
 </nav>
 
