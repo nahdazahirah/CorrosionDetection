@@ -1,3 +1,25 @@
+:root {
+    --color-primary: #123B6D;
+    --color-primary-dark: #0C2A4E;
+    --color-primary-light: #E8EDF7;
+    --color-accent-purple: #5B3FA0;
+    --color-accent-purple-light: #F1EDF9;
+    --color-accent-red: #C62828;
+    --color-accent-red-dark: #A31E1E;
+    --color-accent-red-light: #FBE3E3;
+    --color-bg: #F4F6FA;
+    --color-surface: #FFFFFF;
+    --color-border: #D7DEE8;
+    --color-text: #1B2430;
+    --color-text-muted: #5C6B7A;
+    --font-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-base);
+    color: var(--color-text);
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
@@ -59,7 +81,7 @@
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #123B6D;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
@@ -90,10 +112,10 @@ code {
 
 
 body {
-    background-color: #FFF9DB;
+    background-color: #F4F6FA;
 
     input[type="file"]::file-selector-button {
-        background-color: #8B5E3C;
+        background-color: #123B6D;
         color: white;
         border: none;
         border-radius: 8px;
@@ -103,7 +125,7 @@ body {
     }
 
         input[type="file"]::file-selector-button:hover {
-            background-color: #6f4a2f;
+            background-color: #0C2A4E;
         }
 
     .home-container {
@@ -129,7 +151,7 @@ body {
     .btn-mulai {
         display: inline-block;
         padding: 8px 16px;
-        background-color: #8B5E3C;
+        background-color: #123B6D;
         color: white;
         border: none;
         border-radius: 8px;
@@ -140,7 +162,7 @@ body {
     }
 
         .btn-mulai:hover {
-            background-color: #6f4a2f;
+            background-color: #0C2A4E;
         }
 
     .dashboard-controls {
@@ -155,23 +177,23 @@ body {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-family: Georgia, serif;
-        color: #4a3524;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #1B2430;
     }
 
         .interval-control select {
             padding: 0.3rem 0.5rem;
             border-radius: 6px;
-            border: 1px solid #c9bd94;
-            font-family: Georgia, serif;
+            border: 1px solid #D7DEE8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
     .btn-stop {
-        background-color: #a94442;
+        background-color: #C62828;
     }
 
         .btn-stop:hover {
-            background-color: #8b3532;
+            background-color: #A31E1E;
         }
 
     .dashboard-main {
@@ -201,8 +223,8 @@ body {
         text-align: left;
         max-height: 500px;
         overflow-y: auto;
-        background-color: #fdf9e7;
-        border: 1px solid #e0d9b8;
+        background-color: #F6F8FC;
+        border: 1px solid #DCE3EC;
         border-radius: 6px;
         padding: 1rem 1.25rem;
         min-width: 280px;
@@ -220,14 +242,14 @@ body {
 
         .history-table th,
         .history-table td {
-            border: 1px solid #c9bd94;
+            border: 1px solid #D7DEE8;
             padding: 6px 10px;
             text-align: center;
             font-size: 0.9rem;
         }
 
         .history-table th {
-            background-color: #eee4bd;
+            background-color: #EAF0F8;
         }
 
     @media (max-width: 900px) {

@@ -1,17 +1,17 @@
-﻿.navbar {
+.navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1rem 2rem;
-    background-color: #faf6dc;
-    border-bottom: 1px solid #e0d9b8;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #DCE3EC;
 }
 
 .navbar-brand .logo {
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     font-weight: bold;
     font-size: 1.3rem;
-    color: #4a3524;
+    color: #1B2430;
 }
 
 .navbar-links {
@@ -21,8 +21,8 @@
 
     .navbar-links ::deep a {
         text-decoration: none;
-        color: #4a3524;
-        font-family: Georgia, serif;
+        color: #1B2430;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         font-size: 1rem;
         padding: 0.4rem 0.2rem;
         border-bottom: 2px solid transparent;
@@ -30,11 +30,11 @@
     }
 
         .navbar-links ::deep a:hover {
-            border-bottom-color: #8B6F47;
+            border-bottom-color: #123B6D;
         }
 
         .navbar-links ::deep a.active {
-            border-bottom-color: #8B6F47;
+            border-bottom-color: #123B6D;
             font-weight: bold;
         }
 

@@ -10,18 +10,6 @@ namespace CorrosionDetectionApi.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_DetectionItems_DetectionSessions_DetectionSessionId",
-                table: "DetectionItems");
-
-            migrationBuilder.DropIndex(
-                name: "IX_DetectionItems_DetectionSessionId",
-                table: "DetectionItems");
-
-            migrationBuilder.DropColumn(
-                name: "DetectionSessionId",
-                table: "DetectionItems");
-
             migrationBuilder.CreateIndex(
                 name: "IX_DetectionItems_SessionId",
                 table: "DetectionItems",
@@ -39,14 +27,6 @@ namespace CorrosionDetectionApi.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_DetectionItems_DetectionSessions_SessionId",
-                table: "DetectionItems");
-
-            migrationBuilder.DropIndex(
-                name: "IX_DetectionItems_SessionId",
-                table: "DetectionItems");
-
             migrationBuilder.AddColumn<int>(
                 name: "DetectionSessionId",
                 table: "DetectionItems",

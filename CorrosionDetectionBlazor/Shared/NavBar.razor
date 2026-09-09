@@ -9,18 +9,21 @@
         <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
 
         <AuthorizeView Roles="Admin,Operator">
+            <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/corrosion">Deteksi Korosi</NavLink>
         </AuthorizeView>
 
-        <NavLink href="/riwayat">Riwayat</NavLink>
+        <AuthorizeView>
+            <Authorized>
+                <NavLink href="/riwayat">Riwayat</NavLink>
+            </Authorized>
+        </AuthorizeView>
 
         <NavLink href="/tentang">Tentang</NavLink>
 
-        <AuthorizeView Context="authCtx">
+        <AuthorizeView>
             <Authorized>
-                <NavLink href="/profile" class="profile-link">
-                    @(authCtx.User.Identity?.Name ?? "Profil")
-                </NavLink>
+                <NavLink href="/profile" class="profile-link">Profil</NavLink>
             </Authorized>
             <NotAuthorized>
                 <NavLink href="/login">Masuk</NavLink>

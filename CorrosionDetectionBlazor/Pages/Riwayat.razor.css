@@ -1,30 +1,46 @@
-﻿.riwayat-page {
-    font-family: Georgia, serif;
-    color: #4a3524;
-    max-width: 960px;
+.riwayat-page {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1E293B;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 28px 20px 60px;
+    padding: 32px 40px 60px;
+    background-color: #F8FAFC;
+    box-sizing: border-box;
 }
 
+    .riwayat-page h2 {
+        margin: 0 0 6px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0F172A;
+    }
+
+.subtitle {
+    color: #64748B;
+    font-size: 0.875rem;
+    margin: 0 0 24px;
+}
+
+/* Toast konfirmasi & notifikasi */
 .confirmation-toast,
 .notification-toast {
     position: fixed;
     top: 24px;
     right: 24px;
     z-index: 1000;
-    box-shadow: 0 8px 24px rgba(74, 53, 36, 0.2);
-    border-radius: 10px;
-    font-family: Georgia, serif;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .confirmation-toast {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     max-width: min(460px, calc(100vw - 48px));
-    padding: 14px 16px;
-    background-color: #fffdf5;
-    border: 1px solid #c9bd94;
+    padding: 16px 18px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
 }
 
 .toast-icon {
@@ -34,9 +50,9 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background-color: #eee4bd;
-    color: #8B5E3C;
-    font-weight: bold;
+    background-color: #FEF3C7;
+    color: #B45309;
+    font-weight: 700;
 }
 
 .toast-content {
@@ -46,75 +62,83 @@
     flex: 1;
 }
 
-.toast-content strong {
-    color: #4a3524;
-}
+    .toast-content strong {
+        color: #0F172A;
+        font-size: 0.9rem;
+    }
 
-.toast-content span {
-    color: #7a6a52;
-    font-size: 0.82rem;
-}
+    .toast-content span {
+        color: #64748B;
+        font-size: 0.82rem;
+    }
 
 .toast-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .toast-cancel-btn,
 .toast-confirm-btn {
-    border: none;
-    border-radius: 6px;
-    padding: 7px 11px;
+    border-radius: 8px;
+    padding: 7px 14px;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     font-size: 0.8rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .toast-cancel-btn {
-    background-color: transparent;
-    border: 1px solid #c9bd94;
-    color: #6f4a2f;
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #475569;
 }
 
+    .toast-cancel-btn:hover {
+        background-color: #F1F5F9;
+    }
+
 .toast-confirm-btn {
-    background-color: #a94442;
+    background-color: #DC2626;
+    border: none;
     color: white;
 }
 
-.toast-confirm-btn:hover {
-    background-color: #8b3532;
-}
+    .toast-confirm-btn:hover {
+        background-color: #B91C1C;
+    }
 
-.toast-cancel-btn:disabled,
-.toast-confirm-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
+    .toast-cancel-btn:disabled,
+    .toast-confirm-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
 
 .notification-toast {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background-color: #fffdf5;
-    border: 1px solid #c9bd94;
-    color: #4a3524;
+    gap: 14px;
+    padding: 14px 16px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #1E293B;
 }
 
-.notification-toast.success {
-    border-left: 4px solid #6f8b45;
-}
+    .notification-toast.success {
+        border-left: 4px solid #16A34A;
+    }
 
-.notification-toast.error {
-    border-left: 4px solid #a94442;
-}
+    .notification-toast.error {
+        border-left: 4px solid #DC2626;
+    }
 
 .notification-close {
     border: none;
     background: none;
-    color: #7a6a52;
+    color: #94A3B8;
     font-size: 1.2rem;
     cursor: pointer;
+    line-height: 1;
 }
 
 @media (max-width: 600px) {
@@ -129,104 +153,218 @@
     }
 }
 
-.riwayat-page h2 {
-    margin: 0 0 4px;
-    color: #4a3524;
-}
-
-.subtitle {
-    color: #7a6a52;
-    font-size: 0.9rem;
-    margin: 0 0 24px;
-}
-
 /* Toolbar filter */
 .toolbar {
-    background-color: #eee4bd;
-    border: 1px solid #c9bd94;
-    border-radius: 8px;
-    padding: 16px 18px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 20px 22px;
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 18px;
     align-items: flex-end;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.field label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: #4a3524;
-    margin-bottom: 4px;
+.field {
+    min-width: 150px;
 }
 
-.field input,
-.field select {
-    padding: 0.35rem 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #c9bd94;
-    font-family: Georgia, serif;
-    background-color: #fffdf5;
-    color: #4a3524;
-}
+    .field label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #CBD5E1;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 0.9rem;
+        background-color: #FFFFFF;
+        color: #1E293B;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: #6366F1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
 
 .apply-btn {
-    background-color: #8B5E3C;
+    background-color: #4F46E5;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 8px 20px;
-    font-size: 14px;
+    padding: 9px 22px;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease;
 }
 
-.apply-btn:hover {
-    background-color: #6f4a2f;
-}
+    .apply-btn:hover {
+        background-color: #4338CA;
+    }
 
-.status-msg {
-    color: #7a6a52;
-    font-style: italic;
-    padding: 20px 0;
-}
 .today-btn {
-    background-color: transparent;
-    border: 1px solid #8B5E3C;
-    color: #8B5E3C;
+    background-color: #FFFFFF;
+    border: 1px solid #C7D2FE;
+    color: #4F46E5;
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 9px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease;
 }
 
     .today-btn:hover {
-        background-color: #eee4bd;
+        background-color: #EEF2FF;
     }
+
+.status-msg {
+    color: #64748B;
+    font-style: italic;
+    padding: 32px 0;
+    text-align: center;
+}
+
+/* Tabel riwayat */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+    .history-table th,
+    .history-table td {
+        padding: 12px 16px;
+        text-align: center;
+        font-size: 0.875rem;
+    }
+
+    .history-table th {
+        background-color: #F8FAFC;
+        color: #64748B;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border-bottom: 1px solid #E2E8F0;
+    }
+
+    .history-table td {
+        background-color: #FFFFFF;
+        color: #1E293B;
+        border-bottom: 1px solid #F1F5F9;
+    }
+
+.data-row:last-child td {
+    border-bottom: none;
+}
+
+.data-row:hover td {
+    background-color: #F8FAFC;
+}
 
 .action-cell {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     justify-content: center;
 }
 
-.delete-btn {
-    background-color: #a94442;
-    color: white;
-    border: none;
-    padding: 4px 12px;
+.detail-btn {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    padding: 5px 14px;
     border-radius: 6px;
     font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.delete-btn:hover {
-    background-color: #8b3532;
+    .detail-btn:hover {
+        border-color: #A5B4FC;
+        color: #4F46E5;
+        background-color: #EEF2FF;
+    }
+
+.delete-btn {
+    background-color: #FFFFFF;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-/* Day section */
+    .delete-btn:hover {
+        background-color: #FEF2F2;
+        border-color: #FCA5A5;
+    }
+
+.badge-source {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background-color: #E0E7FF;
+    color: #4338CA;
+}
+
+.area-value {
+    font-weight: 600;
+    color: #1E293B;
+}
+
+    .area-value.high {
+        color: #DC2626;
+    }
+
+.detail-panel {
+    background-color: #F8FAFC;
+    border-left: 3px solid #4F46E5;
+    padding: 16px 20px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+    .detail-panel strong {
+        color: #1E293B;
+    }
+
+.detail-list {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+    .detail-list li {
+        margin-bottom: 6px;
+    }
+
+/* Section per hari (jika dipakai) */
 .day-section {
     margin-bottom: 32px;
 }
@@ -235,15 +373,15 @@
     display: flex;
     align-items: baseline;
     gap: 12px;
-    border-bottom: 2px solid #8B5E3C;
-    padding-bottom: 8px;
-    margin-bottom: 4px;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .day-num {
-    font-size: 30px;
-    font-weight: bold;
-    color: #8B5E3C;
+    font-size: 28px;
+    font-weight: 700;
+    color: #4F46E5;
     line-height: 1;
 }
 
@@ -254,99 +392,31 @@
 
 .day-weekday {
     font-size: 0.95rem;
-    font-weight: bold;
-    color: #4a3524;
+    font-weight: 600;
+    color: #1E293B;
 }
 
 .day-month {
     font-size: 0.75rem;
-    color: #7a6a52;
+    color: #64748B;
 }
 
 .riwayat-table {
     margin-top: 8px;
 }
 
-.badge-source {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    background-color: #eee4bd;
-    color: #6f4a2f;
-    border: 1px solid #c9bd94;
-}
+@media (max-width: 700px) {
+    .riwayat-page {
+        padding: 24px 16px 48px;
+    }
 
-.area-value {
-    font-weight: bold;
-}
-
-.area-value.high {
-    color: #a94442;
-}
-
-.detail-btn {
-    background: none;
-    border: 1px solid #c9bd94;
-    color: #4a3524;
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    font-family: Georgia, serif;
-}
-
-.detail-btn:hover {
-    border-color: #8B5E3C;
-    color: #8B5E3C;
-}
-
-.detail-panel {
-    background-color: #fdf9e7;
-    border-left: 3px solid #8B5E3C;
-    padding: 12px 16px;
-    font-size: 0.85rem;
-    color: #6f5a44;
-}
-
-.detail-panel strong {
-    color: #4a3524;
-}
-
-.detail-list {
-    margin: 8px 0 0;
-    padding-left: 18px;
-}
-
-.detail-list li {
-    margin-bottom: 4px;
-}
-
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
-}
+    .toolbar {
+        padding: 16px;
+    }
 
     .history-table th,
     .history-table td {
-        border: 1px solid #c9bd94;
-        padding: 10px 14px;
-        text-align: center;
-        font-size: 0.9rem;
+        padding: 10px 8px;
+        font-size: 0.8rem;
     }
-
-    .history-table th {
-        background-color: #eee4bd;
-        color: #4a3524;
-        font-weight: bold;
-    }
-
-    .history-table td {
-        background-color: #fffdf5;
-    }
-
-.data-row:hover td {
-    background-color: #f5eecb;
 }

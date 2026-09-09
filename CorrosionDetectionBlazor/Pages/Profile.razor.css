@@ -1,34 +1,116 @@
-﻿.akun-page {
-    font-family: Georgia, serif;
-    color: #4a3524;
+.akun-page {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1E293B;
     max-width: 800px;
     margin: 0 auto;
-    padding: 28px 20px 60px;
+    padding: 32px 20px 60px;
+    background-color: #F8FAFC;
 }
 
+    .akun-page h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 20px;
+        color: #0F172A;
+    }
+
 .subtitle {
-    color: #7a6a52;
-    font-size: 0.9rem;
+    color: #64748B;
+    font-size: 0.875rem;
     margin: 0 0 24px;
 }
 
-.form-card {
-    background-color: #eee4bd;
-    border: 1px solid #c9bd94;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 28px;
+/* Profile card */
+.profile-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-    .form-card h3 {
-        margin: 0 0 14px;
-        font-size: 1rem;
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94A3B8;
+    min-width: 55px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    color: #1E293B;
+    font-weight: 500;
+}
+
+.logout-btn {
+    background-color: #FFFFFF;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+    .logout-btn:hover {
+        background-color: #FEF2F2;
+        border-color: #FCA5A5;
+    }
+
+.akun-section {
+    border-top: 1px solid #E2E8F0;
+    padding-top: 24px;
+}
+
+    .akun-section h3 {
+        margin: 0 0 4px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0F172A;
+    }
+
+.form-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+    .form-card h4 {
+        margin: 0 0 16px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0F172A;
     }
 
 .form-row {
     display: flex;
     gap: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
 }
 
@@ -40,21 +122,35 @@
     .field label {
         display: block;
         font-size: 0.75rem;
-        font-weight: bold;
-        margin-bottom: 4px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #475569;
     }
 
     .field input, .field select {
         width: 100%;
-        padding: 8px 10px;
-        border-radius: 6px;
-        border: 1px solid #c9bd94;
-        font-family: Georgia, serif;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid #CBD5E1;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 0.9rem;
         box-sizing: border-box;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: #6366F1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .field input:disabled {
+            background-color: #F1F5F9;
+            color: #94A3B8;
+        }
+
 .error-msg {
-    color: #a94442;
+    color: #DC2626;
     font-size: 0.85rem;
     margin: 4px 0;
 }
@@ -66,99 +162,229 @@
 }
 
 .save-btn {
-    background-color: #8B5E3C;
+    background-color: #4F46E5;
     color: white;
     border: none;
-    padding: 8px 20px;
+    padding: 9px 22px;
     border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease;
 }
 
     .save-btn:hover {
-        background-color: #6f4a2f;
+        background-color: #4338CA;
     }
 
 .cancel-btn {
-    background: none;
-    border: 1px solid #c9bd94;
-    padding: 8px 20px;
+    background: #FFFFFF;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+    padding: 9px 22px;
     border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease;
 }
 
+    .cancel-btn:hover {
+        background-color: #F1F5F9;
+    }
+
+.status-msg {
+    color: #64748B;
+    font-size: 0.9rem;
+}
+
+/* Tabel akun (dipakai di admin view) */
 .akun-table {
     width: 100%;
     border-collapse: collapse;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-    .akun-table th, .akun-table td {
-        border-bottom: 1px solid #e0d9b8;
-        padding: 10px 8px;
+    .akun-table th {
         text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 12px 16px;
+        background-color: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
     }
 
-.role-badge {
-    padding: 2px 10px;
-    border-radius: 10px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
+    .akun-table td {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        color: #1E293B;
+        border-bottom: 1px solid #F1F5F9;
+    }
 
-.role-admin {
-    background-color: #f0d9d9;
-    color: #a94442;
-}
-
-.role-operator {
-    background-color: #d9e8d9;
-    color: #3a6b3a;
-}
-
-.role-viewer {
-    background-color: #eee4bd;
-    color: #6f4a2f;
-}
+    .akun-table tr:last-child td {
+        border-bottom: none;
+    }
 
 .action-cell {
     display: flex;
-    gap: 6px;
+    gap: 8px;
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.user-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+    .user-card:hover {
+        border-color: #C7D2FE;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.08);
+    }
+
+.user-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #fff;
+}
+
+    .user-avatar.role-admin {
+        background-color: #DC2626;
+    }
+
+    .user-avatar.role-operator {
+        background-color: #4F46E5;
+    }
+
+    .user-avatar.role-viewer {
+        background-color: #7C3AED;
+    }
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1E293B;
+}
+
+.user-email {
+    font-size: 0.8rem;
+    color: #64748B;
+    word-break: break-all;
+}
+
+.user-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+    .user-actions .edit-btn,
+    .user-actions .delete-btn {
+        flex: 1;
+    }
+
+.role-badge {
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.role-admin {
+    background-color: #FEE2E2;
+    color: #B91C1C;
+}
+
+.role-operator {
+    background-color: #E0E7FF;
+    color: #4338CA;
+}
+
+.role-viewer {
+    background-color: #EDE9FE;
+    color: #6D28D9;
 }
 
 .edit-btn {
-    background: none;
-    border: 1px solid #c9bd94;
-    padding: 4px 12px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    padding: 5px 14px;
     border-radius: 6px;
     font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease;
 }
+
+    .edit-btn:hover {
+        background-color: #F1F5F9;
+    }
 
 .delete-btn {
-    background-color: #a94442;
-    color: white;
-    border: none;
-    padding: 4px 12px;
+    background-color: #FFFFFF;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    padding: 5px 14px;
     border-radius: 6px;
     font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
-    font-family: Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-/*melihat password*/
+    .delete-btn:hover {
+        background-color: #FEF2F2;
+        border-color: #FCA5A5;
+    }
+
+/* melihat password */
 .password-input-wrap {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.password-input-wrap input {
+    .password-input-wrap input {
         width: 100%;
         padding-right: 40px;
-
-}
+    }
 
 .toggle-password-btn {
     position: absolute;
@@ -169,9 +395,9 @@
     font-size: 1rem;
     padding: 2px 6px;
     line-height: 1;
+    color: #64748B;
 }
 
-.toggle-password-btn:hover {
+    .toggle-password-btn:hover {
         opacity: 0.7;
-
-}
+    }

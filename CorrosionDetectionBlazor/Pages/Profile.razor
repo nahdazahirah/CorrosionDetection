@@ -1,97 +1,127 @@
-﻿@page "/Profile"
-@attribute [Authorize(Roles = "Admin")]
+@page "/Profile"
+@attribute [Authorize]
 @using System.Net.Http.Json
+@inject HttpClient Http
+@inject CorrosionDetectionBlazor.Auth.CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthProvider
 
 <div class="akun-page">
-    <h2>Kelola Akun</h2>
-    <p class="subtitle">Tambah, ubah, atau hapus akun pengguna sistem.</p>
+    <h2>Profil</h2>
 
-    <div class="form-card">
-        <h3>@(editingId == null ? "Tambah Akun Baru" : "Ubah Akun")</h3>
-        <div class="form-row">
-            <div class="field">
-                <label>Nama Lengkap</label>
-                <input @bind="formModel.FullName" />
+    <div class="profile-card">
+        <div class="profile-info">
+            <div class="info-row">
+                <span class="info-label">Nama</span>
+                <span class="info-value">@currentName</span>
             </div>
-            <div class="field">
-                <label>Email</label>
-                <input @bind="formModel.Email" disabled="@(editingId != null)" />
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">@currentEmail</span>
             </div>
-        </div>
-        <div class="form-row">
-            
-            @if (editingId == null)
-            {
-                <div class="field">
-                    <label>Password</label>
-                    <div class="password-input-wrap">
-                        <input type="@(showPassword ? "text" : "password")" @bind="formModel.Password" />
-                        <button type="button" class="toggle-password-btn" @onclick="TogglePasswordVisibility">
-                            @(showPassword ? "🔒" : "🔐")
-                        </button>
-                    </div>
-                </div>
-            }
-
-            <div class="field">
-                <label>Role</label>
-                <select @bind="formModel.Role">
-                    <option value="Admin">Admin</option>
-                    <option value="Operator">Operator</option>
-                    <option value="Viewer">Viewer</option>
-                </select>
+            <div class="info-row">
+                <span class="info-label">Role</span>
+                <span class="role-badge role-@currentRole.ToLower()">@currentRole</span>
             </div>
         </div>
-
-        @if (!string.IsNullOrEmpty(formError))
-        {
-            <p class="error-msg">@formError</p>
-        }
-
-        <div class="form-actions">
-            <button class="save-btn" @onclick="SaveUser">@(editingId == null ? "Tambah" : "Simpan")</button>
-            @if (editingId != null)
-            {
-                <button class="cancel-btn" @onclick="CancelEdit">Batal</button>
-            }
-        </div>
+        <button class="logout-btn" @onclick="Logout">Keluar</button>
     </div>
 
-    @if (isLoading)
-    {
-        <p class="status-msg">Memuat data akun...</p>
-    }
-    else
-    {
-        <table class="akun-table">
-            <thead>
-                <tr>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Detail</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var u in users)
+    <AuthorizeView Roles="Admin" Context="adminCtx">
+        <Authorized>
+            <div class="akun-section">
+                <h3>Kelola Akun</h3>
+                <p class="subtitle">Tambah, ubah, atau hapus akun pengguna sistem.</p>
+
+                <div class="form-card">
+                    <h4>@(editingId == null ? "Tambah Akun Baru" : "Ubah Akun")</h4>
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Nama Lengkap</label>
+                            <input @bind="formModel.FullName" />
+                        </div>
+                        <div class="field">
+                            <label>Email</label>
+                            <input @bind="formModel.Email" disabled="@(editingId != null)" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        @if (editingId == null)
+                        {
+                            <div class="field">
+                                <label>Password</label>
+                                <div class="password-input-wrap">
+                                    <input type="@(showPassword ? "text" : "password")" @bind="formModel.Password" />
+                                    <button type="button" class="toggle-password-btn" @onclick="TogglePasswordVisibility">
+                                        @(showPassword ? "🔒" : "🔐")
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        <div class="field">
+                            <label>Role</label>
+                            <select @bind="formModel.Role">
+                                <option value="Admin">Admin</option>
+                                <option value="Operator">Operator</option>
+                                <option value="Viewer">Viewer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formError))
+                    {
+                        <p class="error-msg">@formError</p>
+                    }
+
+                    <div class="form-actions">
+                        <button class="save-btn" @onclick="SaveUser">@(editingId == null ? "Tambah" : "Simpan")</button>
+                        @if (editingId != null)
+                        {
+                            <button class="cancel-btn" @onclick="CancelEdit">Batal</button>
+                        }
+                    </div>
+                </div>
+
+                @if (isLoading)
                 {
-                    <tr>
-                        <td>@u.FullName</td>
-                        <td>@u.Email</td>
-                        <td><span class="role-badge role-@u.Role.ToLower()">@u.Role</span></td>
-                        <td class="action-cell">
-                            <button class="edit-btn" @onclick="() => StartEdit(u)">Ubah</button>
-                            <button class="delete-btn" @onclick="() => DeleteUser(u.Id)">Hapus</button>
-                        </td>
-                    </tr>
+                    <p class="status-msg">Memuat data akun...</p>
                 }
-            </tbody>
-        </table>
-    }
+                else
+                {
+                    <table class="akun-table">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var u in users)
+                            {
+                                <tr>
+                                    <td>@u.FullName</td>
+                                    <td>@u.Email</td>
+                                    <td><span class="role-badge role-@u.Role.ToLower()">@u.Role</span></td>
+                                    <td class="action-cell">
+                                        <button class="edit-btn" @onclick="() => StartEdit(u)">Ubah</button>
+                                        <button class="delete-btn" @onclick="() => DeleteUser(u.Id)">Hapus</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </Authorized>
+    </AuthorizeView>
 </div>
 
 @code {
-    [Inject] private HttpClient Http { get; set; } = default!;
+    private string currentName = "";
+    private string currentEmail = "";
+    private string currentRole = "";
 
     private List<UserDto> users = new();
     private bool isLoading = false;
@@ -100,7 +130,26 @@
     private FormModel formModel = new();
     private bool showPassword = false;
 
-    protected override async Task OnInitializedAsync() => await LoadUsers();
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        currentName = user.Identity?.Name ?? "";
+        currentEmail = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+        currentRole = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+
+        if (currentRole == "Admin")
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task Logout()
+    {
+        await AuthStateProvider.MarkUserAsLoggedOut();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
 
     private async Task LoadUsers()
     {
@@ -132,25 +181,31 @@
     {
         formError = null;
 
+        HttpResponseMessage response;
         if (editingId == null)
-        {
-            var response = await Http.PostAsJsonAsync("api/users", formModel);
-            if (!response.IsSuccessStatusCode)
-            {
-                var err = await response.Content.ReadFromJsonAsync<ErrorDto>();
-                formError = err?.Message ?? "Gagal menambah akun.";
-                return;
-            }
-        }
+            response = await Http.PostAsJsonAsync("api/users", formModel);
         else
+            response = await Http.PutAsJsonAsync($"api/users/{editingId}", formModel);
+
+        if (!response.IsSuccessStatusCode)
         {
-            var response = await Http.PutAsJsonAsync($"api/users/{editingId}", formModel);
-            if (!response.IsSuccessStatusCode)
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                var err = await response.Content.ReadFromJsonAsync<ErrorDto>();
-                formError = err?.Message ?? "Gagal memperbarui akun.";
-                return;
+                formError = "Sesi login sudah berakhir atau Anda tidak memiliki akses. Silakan login ulang.";
             }
+            else
+            {
+                try
+                {
+                    var err = await response.Content.ReadFromJsonAsync<ErrorDto>();
+                    formError = err?.Message ?? "Gagal menyimpan akun.";
+                }
+                catch
+                {
+                    formError = "Gagal menyimpan akun.";
+                }
+            }
+            return;
         }
 
         CancelEdit();
@@ -166,7 +221,7 @@
         }
     }
 
-    private void TogglePasswordVisibility()   
+    private void TogglePasswordVisibility()
     {
         showPassword = !showPassword;
     }
