@@ -26,7 +26,7 @@ namespace CorrosionDetection.Api.Controllers
         [HttpPost("detect")]
         public async Task<IActionResult> Detect(
             IFormFile image,
-            [FromQuery] string sourceType = "upload")
+            [FromForm] string sourceType = "upload")
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Tidak ada gambar yang diupload.");

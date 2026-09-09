@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public int SessionId { get; set; }
+        public DetectionSession DetectionSession { get; set; } = null!;
 
         public float X { get; set; }
         public float Y { get; set; }

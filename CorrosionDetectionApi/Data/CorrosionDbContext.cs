@@ -12,6 +12,12 @@ namespace CorrosionDetectionApi.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<DetectionItem>()
+                .HasOne(item => item.DetectionSession)
+                .WithMany(session => session.Items)
+                .HasForeignKey(item => item.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

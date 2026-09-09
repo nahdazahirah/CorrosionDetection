@@ -50,7 +50,7 @@ namespace CorrosionDetection.Api.Controllers
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(8),
+                expires: DateTime.Now.AddHours(12),
                 signingCredentials: creds
             );
 

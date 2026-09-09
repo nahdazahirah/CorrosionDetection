@@ -3,6 +3,31 @@
 @using System.Net.Http.Json
 
 <div class="riwayat-page">
+    @if (confirmationSessionId.HasValue)
+    {
+        <div class="confirmation-toast" role="alertdialog" aria-live="assertive">
+            <div class="toast-icon">!</div>
+            <div class="toast-content">
+                <strong>Hapus riwayat?</strong>
+                <span>Data deteksi ini akan dihapus secara permanen.</span>
+            </div>
+            <div class="toast-actions">
+                <button class="toast-cancel-btn" @onclick="CancelDelete" disabled="@isDeleting">Batal</button>
+                <button class="toast-confirm-btn" @onclick="ConfirmDelete" disabled="@isDeleting">
+                    @(isDeleting ? "Menghapus..." : "Hapus")
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(notificationMessage))
+    {
+        <div class="notification-toast @(notificationIsError ? "error" : "success")" role="status">
+            <span>@notificationMessage</span>
+            <button class="notification-close" @onclick="ClearNotification" aria-label="Tutup">×</button>
+        </div>
+    }
+
     <h2>Riwayat Deteksi Korosi</h2>
     <p class="subtitle">Menampilkan data hari ini. Gunakan filter untuk melihat tanggal lain.</p>
 
@@ -53,7 +78,7 @@
                     <th>Sumber</th>
                     <th>Jumlah Deteksi</th>
                     <th>Area Terbesar</th>
-                    <th></th>
+                    <th>Detail</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,7 +100,7 @@
                             </button>
                             <AuthorizeView Roles="Admin" Context="authCtx">
                                 <Authorized>
-                                    <button class="delete-btn" @onclick="() => DeleteSession(s.Id)">Hapus</button>
+                                    <button class="delete-btn" @onclick="() => AskDelete(s.Id)">Hapus</button>
                                 </Authorized>
                             </AuthorizeView>
                         </td>
@@ -113,6 +138,10 @@
     private List<SessionDto> sessions = new();
     private bool isLoading = false;
     private int? expandedId = null;
+    private int? confirmationSessionId = null;
+    private bool isDeleting = false;
+    private string? notificationMessage;
+    private bool notificationIsError;
 
     private DateTime? fromDate = DateTime.Today;
     private DateTime? toDate = DateTime.Today;
@@ -150,14 +179,57 @@
         finally { isLoading = false; }
     }
 
-    private async Task DeleteSession(int id)
+    private void AskDelete(int id)
     {
-        var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
-        if (response.IsSuccessStatusCode)
+        confirmationSessionId = id;
+        notificationMessage = null;
+    }
+
+    private void CancelDelete()
+    {
+        if (!isDeleting)
+            confirmationSessionId = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (!confirmationSessionId.HasValue)
+            return;
+
+        var id = confirmationSessionId.Value;
+        isDeleting = true;
+
+        try
         {
-            sessions.RemoveAll(s => s.Id == id);
+            var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                sessions.RemoveAll(s => s.Id == id);
+                if (expandedId == id)
+                    expandedId = null;
+
+                notificationMessage = "Riwayat berhasil dihapus.";
+                notificationIsError = false;
+                confirmationSessionId = null;
+            }
+            else
+            {
+                notificationMessage = "Riwayat gagal dihapus. Silakan coba lagi.";
+                notificationIsError = true;
+            }
+        }
+        catch
+        {
+            notificationMessage = "Tidak dapat terhubung ke server.";
+            notificationIsError = true;
+        }
+        finally
+        {
+            isDeleting = false;
         }
     }
+
+    private void ClearNotification() => notificationMessage = null;
 
     private void ToggleExpand(int id) => expandedId = expandedId == id ? null : id;
 

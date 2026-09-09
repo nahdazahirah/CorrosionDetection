@@ -6,6 +6,129 @@
     padding: 28px 20px 60px;
 }
 
+.confirmation-toast,
+.notification-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(74, 53, 36, 0.2);
+    border-radius: 10px;
+    font-family: Georgia, serif;
+}
+
+.confirmation-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(460px, calc(100vw - 48px));
+    padding: 14px 16px;
+    background-color: #fffdf5;
+    border: 1px solid #c9bd94;
+}
+
+.toast-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #eee4bd;
+    color: #8B5E3C;
+    font-weight: bold;
+}
+
+.toast-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.toast-content strong {
+    color: #4a3524;
+}
+
+.toast-content span {
+    color: #7a6a52;
+    font-size: 0.82rem;
+}
+
+.toast-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.toast-cancel-btn,
+.toast-confirm-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 7px 11px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+}
+
+.toast-cancel-btn {
+    background-color: transparent;
+    border: 1px solid #c9bd94;
+    color: #6f4a2f;
+}
+
+.toast-confirm-btn {
+    background-color: #a94442;
+    color: white;
+}
+
+.toast-confirm-btn:hover {
+    background-color: #8b3532;
+}
+
+.toast-cancel-btn:disabled,
+.toast-confirm-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.notification-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background-color: #fffdf5;
+    border: 1px solid #c9bd94;
+    color: #4a3524;
+}
+
+.notification-toast.success {
+    border-left: 4px solid #6f8b45;
+}
+
+.notification-toast.error {
+    border-left: 4px solid #a94442;
+}
+
+.notification-close {
+    border: none;
+    background: none;
+    color: #7a6a52;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .confirmation-toast {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .toast-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
 .riwayat-page h2 {
     margin: 0 0 4px;
     color: #4a3524;

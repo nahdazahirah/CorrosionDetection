@@ -169,6 +169,7 @@
             using var fileContent = new ByteArrayContent(imageBytes);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
             content.Add(fileContent, "image", "frame.png");
+            content.Add(new StringContent("webcam"), "sourceType");
 
             var response = await Http.PostAsync("api/corrosion/detect", content);
             if (response.IsSuccessStatusCode)
