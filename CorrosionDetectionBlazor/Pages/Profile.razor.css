@@ -146,3 +146,32 @@
     cursor: pointer;
     font-family: Georgia, serif;
 }
+
+/*melihat password*/
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap input {
+        width: 100%;
+        padding-right: 40px;
+
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    line-height: 1;
+}
+
+.toggle-password-btn:hover {
+        opacity: 0.7;
+
+}

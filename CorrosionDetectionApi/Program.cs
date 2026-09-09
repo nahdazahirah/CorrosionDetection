@@ -65,6 +65,14 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// 1. Migrate database DULU — supaya semua tabel (termasuk Identity) sudah ada
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CorrosionDbContext>();
+    db.Database.Migrate();
+}
+
+// 2. BARU seed roles & admin user
 using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -122,13 +130,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
-
-// Apply any pending EF Core migrations on startup so the database is created/updated automatically.
-// Useful for development; for production consider more controlled migration deployment.
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<CorrosionDbContext>();
-    db.Database.Migrate();
-}
 
 app.Run();

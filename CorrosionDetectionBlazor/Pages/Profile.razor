@@ -19,13 +19,20 @@
             </div>
         </div>
         <div class="form-row">
+            
             @if (editingId == null)
             {
                 <div class="field">
                     <label>Password</label>
-                    <input type="password" @bind="formModel.Password" />
+                    <div class="password-input-wrap">
+                        <input type="@(showPassword ? "text" : "password")" @bind="formModel.Password" />
+                        <button type="button" class="toggle-password-btn" @onclick="TogglePasswordVisibility">
+                            @(showPassword ? "🔒" : "🔐")
+                        </button>
+                    </div>
                 </div>
             }
+
             <div class="field">
                 <label>Role</label>
                 <select @bind="formModel.Role">
@@ -91,6 +98,7 @@
     private string? editingId = null;
     private string? formError;
     private FormModel formModel = new();
+    private bool showPassword = false;
 
     protected override async Task OnInitializedAsync() => await LoadUsers();
 
@@ -156,6 +164,11 @@
         {
             users.RemoveAll(u => u.Id == id);
         }
+    }
+
+    private void TogglePasswordVisibility()   
+    {
+        showPassword = !showPassword;
     }
 
     private class UserDto

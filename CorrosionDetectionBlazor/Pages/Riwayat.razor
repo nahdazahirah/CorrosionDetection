@@ -150,11 +150,11 @@
 
     protected override async Task OnInitializedAsync() => await LoadHistory();
 
-    private void ResetToToday()
+    private async Task ResetToToday()
     {
         fromDate = DateTime.Today;
         toDate = DateTime.Today;
-        _ = LoadHistory();
+        await LoadHistory();
     }
 
     private async Task LoadHistory()

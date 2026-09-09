@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorrosionDetectionApi.Migrations
 {
     [DbContext(typeof(CorrosionDbContext))]
-    [Migration("20260909015733_FixDetectionItemSessionRelationship_v2")]
-    partial class FixDetectionItemSessionRelationship_v2
+    [Migration("20260909025027_FixSessionRelationshipClean")]
+    partial class FixSessionRelationshipClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

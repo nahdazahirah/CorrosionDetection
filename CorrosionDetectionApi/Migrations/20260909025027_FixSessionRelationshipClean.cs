@@ -5,7 +5,7 @@
 namespace CorrosionDetectionApi.Migrations
 {
     /// <inheritdoc />
-    public partial class FixDetectionItemSessionRelationship : Migration
+    public partial class FixSessionRelationshipClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
