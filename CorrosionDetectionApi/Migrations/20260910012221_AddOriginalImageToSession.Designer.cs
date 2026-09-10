@@ -4,6 +4,7 @@ using CorrosionDetectionApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorrosionDetectionApi.Migrations
 {
     [DbContext(typeof(CorrosionDbContext))]
-    partial class CorrosionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910012221_AddOriginalImageToSession")]
+    partial class AddOriginalImageToSession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -146,9 +149,6 @@ namespace CorrosionDetectionApi.Migrations
 
                     b.Property<int>("ImageWidth")
                         .HasColumnType("int");
-
-                    b.Property<string>("OriginalImageBase64")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SourceType")
                         .IsRequired()

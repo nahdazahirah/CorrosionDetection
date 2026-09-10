@@ -23,24 +23,33 @@ namespace CorrosionDetection.Api.Controllers
         }
 
         // POST api/corrosion/detect
+
         [HttpPost("detect")]
         public async Task<IActionResult> Detect(
-            IFormFile image,
-            [FromForm] string sourceType = "upload")
+    IFormFile image,
+    [FromForm] string sourceType = "upload")
         {
             if (image == null || image.Length == 0)
                 return BadRequest("Tidak ada gambar yang diupload.");
 
-            using var stream = image.OpenReadStream();
+            // Baca gambar ke byte array dulu (dipakai dua kali: deteksi + simpan base64)
+            byte[] imageBytes;
+            using (var ms = new MemoryStream())
+            {
+                await image.CopyToAsync(ms);
+                imageBytes = ms.ToArray();
+            }
+
+            using var stream = new MemoryStream(imageBytes);
             var response = _detectionService.DetectWithImageInfo(stream);
 
-            // Simpan hasil deteksi ke database
             var session = new DetectionSession
             {
                 SourceType = sourceType == "webcam" ? "webcam" : "upload",
                 ImageWidth = response.ImageWidth,
                 ImageHeight = response.ImageHeight,
                 DetectionCount = response.Detections.Count,
+                OriginalImageBase64 = Convert.ToBase64String(imageBytes),   // TAMBAHKAN INI
                 Items = response.Detections.Select(d => new DetectionItem
                 {
                     X = d.X,
@@ -103,6 +112,7 @@ namespace CorrosionDetection.Api.Controllers
                 s.ImageWidth,
                 s.ImageHeight,
                 s.DetectionCount,
+                s.OriginalImageBase64,
                 MaxAreaPercentage = s.Items.Any() ? s.Items.Max(i => i.AreaPercentage) : 0,
                 Items = s.Items.Select(i => new
                 {

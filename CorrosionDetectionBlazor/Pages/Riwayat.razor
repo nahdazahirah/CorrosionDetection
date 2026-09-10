@@ -8,12 +8,14 @@
         <div class="confirmation-toast" role="alertdialog" aria-live="assertive">
             <div class="toast-icon">!</div>
             <div class="toast-content">
-                <strong>Hapus riwayat?</strong>
+                <strong>@(confirmationSessionId == -1 ? $"Hapus {selectedIds.Count} riwayat?" : "Hapus riwayat?")</strong>
                 <span>Data deteksi ini akan dihapus secara permanen.</span>
             </div>
             <div class="toast-actions">
                 <button class="toast-cancel-btn" @onclick="CancelDelete" disabled="@isDeleting">Batal</button>
-                <button class="toast-confirm-btn" @onclick="ConfirmDelete" disabled="@isDeleting">
+                <button class="toast-confirm-btn"
+                        @onclick="@(confirmationSessionId == -1 ? ConfirmBulkDelete : ConfirmDelete)"
+                        disabled="@isDeleting">
                     @(isDeleting ? "Menghapus..." : "Hapus")
                 </button>
             </div>
@@ -70,9 +72,28 @@
     }
     else
     {
+        
+        @if (selectedIds.Count > 0)
+        {
+            <div class="bulk-toolbar">
+                <span class="selected-count">@selectedIds.Count dipilih</span>
+                <AuthorizeView Roles="Admin" Context="bulkCtx">
+                    <Authorized>
+                        <button class="bulk-delete-btn" @onclick="AskBulkDelete">Hapus Terpilih</button>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        }
+        
         <table class="history-table">
             <thead>
                 <tr>
+                    <th>
+                        <label class="select-all-label">
+                            <input type="checkbox" checked="@AllSelected" @onchange="ToggleSelectAll" />
+                            Pilih Semua
+                        </label>
+                    </th>
                     <th>Tanggal</th>
                     <th>Waktu</th>
                     <th>Sumber</th>
@@ -85,6 +106,12 @@
                 @foreach (var s in sessions)
                 {
                     <tr class="data-row">
+                        <td>
+                            <input type="checkbox"
+                                   checked="@selectedIds.Contains(s.Id)"
+                                   @onchange="e => ToggleSelectOne(s.Id, e)" />
+                        </td>
+                        
                         <td>@s.Timestamp.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("id-ID"))</td>
                         <td>@s.Timestamp.ToString("HH:mm:ss")</td>
                         <td><span class="badge-source">@s.SourceType</span></td>
@@ -108,9 +135,36 @@
                     @if (expandedId == s.Id)
                     {
                         <tr>
-                            <td colspan="6" style="padding:0;">
+                            <td colspan="7" style="padding:0;">
                                 <div class="detail-panel">
-                                    <strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px
+                                    @if (!string.IsNullOrEmpty(s.OriginalImageBase64))
+                                    {
+                                        <div class="detail-image-wrap">
+                                            <img src="data:image/png;base64,@s.OriginalImageBase64" />
+
+                                            @foreach (var item in s.Items)
+                                            {
+                                                <div style="position:absolute;
+                                                    left:@(item.X / s.ImageWidth * 100)%;
+                                                    top:@(item.Y / s.ImageHeight * 100)%;
+                                                    width:@(item.Width / s.ImageWidth * 100)%;
+                                                    height:@(item.Height / s.ImageHeight * 100)%;
+                                                    border:2px solid red;
+                                                    box-sizing:border-box;">
+                                                    <span style="background:red; color:white; font-size:9px; padding:1px 3px;">
+                                                        @item.AreaPercentage.ToString("0.0")%
+                                                    </span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <p class="image-size-caption"><strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px</p>
+                                    }
+                                    else
+                                    {
+                                        <p style="opacity:0.7; font-style:italic; text-align:center;">Gambar tidak tersedia untuk sesi ini.</p>
+                                        <p class="image-size-caption"><strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px</p>
+                                    }
+
                                     <ul class="detail-list">
                                         @foreach (var item in s.Items)
                                         {
@@ -148,6 +202,12 @@
     private string sourceType = "";
     private string sortBy = "date";
 
+    private HashSet<int> selectedIds = new();
+    private bool isBulkDeleting = false;
+
+    private bool AllSelected => sessions.Count > 0 && selectedIds.Count == sessions.Count;
+
+
     protected override async Task OnInitializedAsync() => await LoadHistory();
 
     private async Task ResetToToday()
@@ -161,6 +221,7 @@
     {
         isLoading = true;
         expandedId = null;
+        selectedIds.Clear();
 
         var query = new List<string>();
         if (fromDate.HasValue) query.Add($"fromDate={fromDate:yyyy-MM-dd}");
@@ -242,6 +303,7 @@
         public int ImageHeight { get; set; }
         public int DetectionCount { get; set; }
         public float MaxAreaPercentage { get; set; }
+        public string? OriginalImageBase64 { get; set; }
         public List<ItemDto> Items { get; set; } = new();
     }
 
@@ -254,5 +316,57 @@
         public float Confidence { get; set; }
         public float AreaPercentage { get; set; }
         public string? MaskImageBase64 { get; set; }
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        selectedIds = isChecked
+            ? sessions.Select(s => s.Id).ToHashSet()
+            : new HashSet<int>();
+    }
+
+    private void ToggleSelectOne(int id, ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        if (isChecked) selectedIds.Add(id);
+        else selectedIds.Remove(id);
+    }
+
+    private void AskBulkDelete()
+    {
+        if (selectedIds.Count == 0) return;
+        confirmationSessionId = -1; // penanda khusus: -1 berarti mode bulk delete
+        notificationMessage = null;
+    }
+
+    private async Task ConfirmBulkDelete()
+    {
+        isDeleting = true;
+        var idsToDelete = selectedIds.ToList();
+        int successCount = 0;
+
+        foreach (var id in idsToDelete)
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    sessions.RemoveAll(s => s.Id == id);
+                    successCount++;
+                }
+            }
+            catch { /* lanjut ke id berikutnya walau satu gagal */ }
+        }
+
+        selectedIds.Clear();
+        confirmationSessionId = null;
+        isDeleting = false;
+
+        notificationMessage = successCount == idsToDelete.Count
+            ? $"{successCount} riwayat berhasil dihapus."
+            : $"{successCount} dari {idsToDelete.Count} riwayat berhasil dihapus.";
+        notificationIsError = successCount < idsToDelete.Count;
     }
 }
