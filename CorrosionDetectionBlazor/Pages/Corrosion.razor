@@ -2,66 +2,473 @@
 @attribute [Authorize(Roles = "Admin,Operator")]
 
 @using CorrosionDetection.Blazor.Models
-@inject HttpClient Http
+@using CorrosionDetectionBlazor.Shared
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JS
 
-<div style="text-align:center; margin-top: 20px;">
-    <h2>Upload Foto untuk Deteksi Korosi</h2>
+<PageTitle>Studio Inspeksi Korosi — Pertamina</PageTitle>
 
-    <div>
-        <InputFile OnChange="OnFileSelected" accept="image/*" />
+<div class="inspection-studio">
+    <!-- Header -->
+    <div class="studio-header">
+        <div class="header-titles">
+            <span class="sub-badge">PERTAMINA ASSET INTEGRITY MANAGEMENT</span>
+            <h2>Studio Inspeksi & Analisis Korosi Berbasis AI</h2>
+            <p>Pengenalan visual anomali degradasi material dengan kalkulasi standar ISO 12944 & API 570/510/653</p>
+        </div>
+
+        <!-- Mode Selector Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab @(activeMode == "patrol" ? "active" : "")" @onclick='() => SetMode("patrol")'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Patroli Lapangan (Tablet)
+            </button>
+            <button class="mode-tab @(activeMode == "drone" ? "active" : "")" @onclick='() => SetMode("drone")'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>
+                Survei Drone / UAV (Batch)
+            </button>
+            <button class="mode-tab @(activeMode == "cctv" ? "active" : "")" @onclick='() => SetMode("cctv")'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                Snapshot Berkala NVR/CCTV
+            </button>
+        </div>
     </div>
-
-    @if (isLoading)
-    {
-        <p><em>Sedang memproses...</em></p>
-    }
 
     @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div>
-            <span class="alert alert-danger" role="alert" style="display:inline-block; margin-top:10px;">@errorMessage</span>
+        <div class="alert-box alert-error">
+            <span>@errorMessage</span>
+            <button class="btn-alert-close" @onclick="() => errorMessage = null">×</button>
         </div>
     }
 
-    @if (imageDataUrl != null)
+    @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div style="position: relative; display: inline-block; margin-top: 20px; border: 3px solid #333; border-radius: 6px; padding: 4px;">
-            <img src="@imageDataUrl" style="max-width: 600px; display: block;" @ref="imageElement" />
+        <div class="alert-box alert-success">
+            <span>@successMessage</span>
+            <button class="btn-alert-close" @onclick="() => successMessage = null">×</button>
+        </div>
+    }
 
-            @foreach (var d in detections)
+    <div class="studio-body">
+        <!-- LEFT COLUMN: Form & Ingestion Controls -->
+        <div class="studio-sidebar">
+            @if (activeMode == "patrol")
             {
-                <div style="position:absolute;
-                    left:@(d.X / originalWidth * 100)%;
-                    top:@(d.Y / originalHeight * 100)%;
-                    width:@(d.Width / originalWidth * 100)%;
-                    height:@(d.Height / originalHeight * 100)%;
-                    border:2px solid red;
-                    box-sizing:border-box;">
+                <!-- Mode 1: Patroli Lapangan Form -->
+                <div class="form-card">
+                    <h4>Form Inspeksi Patroli Lapangan</h4>
+                    <p class="form-desc">Lengkapi identitas aset untuk pencatatan CML (Condition Monitoring Location).</p>
 
-                    @if (!string.IsNullOrEmpty(d.MaskImageBase64))
+                    <div class="form-group">
+                        <label>Wilayah Kerja / Kilang</label>
+                        <select @bind="unitName">
+                            <option value="RU VI Balongan">RU VI Balongan</option>
+                            <option value="RU IV Cilacap">RU IV Cilacap</option>
+                            <option value="RU II Dumai">RU II Dumai</option>
+                            <option value="RU III Plaju">RU III Plaju</option>
+                            <option value="RU V Balikpapan">RU V Balikpapan</option>
+                            <option value="Pertamina Hulu Rokan (PHR)">Pertamina Hulu Rokan (PHR)</option>
+                            <option value="Pertamina Patra Niaga">Pertamina Patra Niaga (Terminal BBM)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Area / Unit Fasilitas</label>
+                        <input type="text" @bind="area" placeholder="Contoh: CDU-01 Process Area / Tank Farm B" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Nomor Tag Aset</label>
+                            <input type="text" @bind="equipmentTag" placeholder="Contoh: 11-TK-102A" />
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>Standar Desain</label>
+                            <select @bind="equipmentType">
+                                <option value="Process Piping (API 570)">Process Piping (API 570)</option>
+                                <option value="Storage Tank (API 653)">Storage Tank (API 653)</option>
+                                <option value="Pressure Vessel (API 510)">Pressure Vessel (API 510)</option>
+                                <option value="Struktur Pipe Rack">Struktur Pipe Rack</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Nama Petugas</label>
+                            <input type="text" @bind="inspectorName" />
+                        </div>
+                        <div class="form-group flex-1">
+                            <label>NIP Petugas</label>
+                            <input type="text" @bind="inspectorNip" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Catatan Lapangan (Observasi Visual)</label>
+                        <textarea @bind="notes" rows="2" placeholder="Catatan kondisi lingkungan, fluktuasi suhu, atau indikasi pengelupasan cat..."></textarea>
+                    </div>
+
+                    <div class="upload-zone">
+                        <label class="upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <span>Unggah Foto Citra Inspeksi</span>
+                            <small>Format JPG/PNG hingga 10MB</small>
+                            <InputFile OnChange="OnFileSelected" accept="image/*" class="file-hidden" />
+                        </label>
+                    </div>
+                </div>
+            }
+            else if (activeMode == "drone")
+            {
+                <!-- Mode 2: Batch Survei Drone / UAV -->
+                <div class="form-card">
+                    <h4>Misi Survei Drone / UAV (Batch Processing)</h4>
+                    <p class="form-desc">Proses multi-foto hasil inspeksi terbang drone pada koridor pipa, tangki, dan flare stack.</p>
+
+                    <div class="form-group">
+                        <label>Nama Misi Penerbangan UAV</label>
+                        <input type="text" @bind="droneMissionName" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Wilayah Kilang / Area Penerbangan</label>
+                        <select @bind="unitName">
+                            <option value="RU VI Balongan">RU VI Balongan — Pipe Rack Corridor</option>
+                            <option value="RU IV Cilacap">RU IV Cilacap — Marine Jetty & Tank Farm</option>
+                            <option value="Pertamina Hulu Rokan (PHR)">PHR — Cross-Country Trunkline</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-zone">
+                        <label class="upload-label">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <strong>Pilih Banyak Foto Citra Drone (Batch)</strong>
+                            <small>Mendukung multi-seleksi berkas foto UAV</small>
+                            <InputFile OnChange="OnBatchFilesSelected" multiple accept="image/*" class="file-hidden" />
+                        </label>
+                    </div>
+
+                    @if (isBatchProcessing)
                     {
-                        <img src="data:image/png;base64,@d.MaskImageBase64"
-                             style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                        <div class="batch-progress-box">
+                            <div class="batch-progress-header">
+                                <span>Memproses Foto UAV: @batchProcessedCount / @batchTotalCount</span>
+                                <strong>@batchProgressPercent%</strong>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: @batchProgressPercent%"></div>
+                            </div>
+                        </div>
                     }
 
-                    <span style="background:red; color:white; font-size:11px; padding:1px 3px; position:relative; z-index:1;">
-                        corrosion @((d.Confidence * 100).ToString("0.0"))% — area: @(d.AreaPercentage.ToString("0.0"))%
-                    </span>
+                    @if (batchResults.Any())
+                    {
+                        <div class="batch-summary-list">
+                            <h5>Hasil Batch Drone (@batchResults.Count Foto)</h5>
+                            <div class="batch-items-scroll">
+                                @foreach (var item in batchResults)
+                                {
+                                    <div class="batch-item-row" @onclick="() => SelectBatchItem(item)">
+                                        <div class="batch-item-info">
+                                            <strong>@item.FileName</strong>
+                                            <span>@item.DetectionCount korosi · Area: @item.MaxArea.ToString("0.0")%</span>
+                                        </div>
+                                        <span class="badge-grade @GetGradeBadgeClass(item.Severity)">
+                                            @item.Severity
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <!-- Mode 3: Stasiun CCTV / NVR Periodic Snapshot -->
+                <div class="form-card">
+                    <h4>Stasiun Kamera Terpasang (NVR Periodic Frame)</h4>
+                    <p class="form-desc">Simulasi penarikan still-frame terjadwal dari kamera stasioner kilang tanpa koneksi live stream.</p>
+
+                    <div class="form-group">
+                        <label>Stasiun Kamera CCTV / NVR</label>
+                        <select @bind="selectedCctvStation" @bind:after="OnCctvStationChanged">
+                            <option value="CAM-RU6-CDU-01">CAM-RU6-CDU-01 (Pipe Rack North Header)</option>
+                            <option value="CAM-RU6-TK-08">CAM-RU6-TK-08 (Spherical LPG Tank Farm)</option>
+                            <option value="CAM-RU4-RFCC-02">CAM-RU4-RFCC-02 (Reactor Skirt Structure)</option>
+                            <option value="CAM-PHR-WELLPAD-05">CAM-PHR-WELLPAD-05 (Production Manifold)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Slot Snapshot Terjadwal</label>
+                        <select @bind="selectedCctvSlot">
+                            <option value="08:00 WIB">Shift Pagi (08:00 WIB) — Pencahayaan Optimal</option>
+                            <option value="16:00 WIB">Shift Sore (16:00 WIB) — Inspeksi Pergantian Shift</option>
+                        </select>
+                    </div>
+
+                    <div class="cctv-info-card">
+                        <div class="cctv-meta-row"><span>Lokasi:</span> <strong>@area</strong></div>
+                        <div class="cctv-meta-row"><span>Tag Peralatan Terpantau:</span> <strong>@equipmentTag</strong></div>
+                        <div class="cctv-meta-row"><span>Status Integrasi:</span> <span class="badge-connected">NVR EXPORT SYNC OK</span></div>
+                    </div>
+
+                    <div class="upload-zone">
+                        <label class="upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                            <span>Unggah Still-Frame Ekspor NVR</span>
+                            <small>Gunakan frame terjadwal dari NVR storage</small>
+                            <InputFile OnChange="OnFileSelected" accept="image/*" class="file-hidden" />
+                        </label>
+                    </div>
                 </div>
             }
         </div>
-    }
+
+        <!-- RIGHT COLUMN: Inspection Viewport & Engineering Assessment -->
+        <div class="studio-viewport-col">
+            <!-- Canvas Viewport -->
+            <div class="viewport-card">
+                <div class="viewport-toolbar">
+                    <div class="layer-toggles">
+                        <label class="toggle-item">
+                            <input type="checkbox" @bind="showBoundingBoxes" />
+                            <span>Bounding Box</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" @bind="showMasks" />
+                            <span>Mask Segmentasi Merah</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" @bind="showLabels" />
+                            <span>Label Metrik</span>
+                        </label>
+                    </div>
+
+                    <div class="viewport-actions">
+                        @if (latestResult != null)
+                        {
+                            <button class="btn-dossier-launch" @onclick="OpenDossierFromLatest">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                Cetak Berita Acara Resmi (PDF)
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    @if (isLoading)
+                    {
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <h4>Menjalankan Inferensi AI YOLOv8-Seg...</h4>
+                            <p>Menganalisis sebaran piksel korosi dan merekonstruksi koefisien prototipe mask.</p>
+                        </div>
+                    }
+
+                    @if (imageDataUrl != null)
+                    {
+                        <div class="image-wrapper" @ref="imageElement">
+                            <img src="@imageDataUrl" class="inspected-image" />
+
+                            @if (detections.Any())
+                            {
+                                @foreach (var d in detections)
+                                {
+                                    <div style="position:absolute;
+                                                left:@(d.X / originalWidth * 100)%;
+                                                top:@(d.Y / originalHeight * 100)%;
+                                                width:@(d.Width / originalWidth * 100)%;
+                                                height:@(d.Height / originalHeight * 100)%;
+                                                border:@(showBoundingBoxes ? "2px solid " + GetBoxColor(d.AreaPercentage) : "none");
+                                                box-sizing:border-box;">
+
+                                        @if (showMasks && !string.IsNullOrEmpty(d.MaskImageBase64))
+                                        {
+                                            <img src="data:image/png;base64,@d.MaskImageBase64"
+                                                 style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                                        }
+
+                                        @if (showLabels)
+                                        {
+                                            <span style="background:@GetBoxColor(d.AreaPercentage); color:white; font-size:10px; font-weight:bold; padding:2px 4px; position:absolute; top:-18px; left:0; white-space:nowrap; z-index:2; border-radius:3px;">
+                                                @(d.AreaPercentage.ToString("0.0"))% | Conf: @((d.Confidence * 100).ToString("0.0"))%
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="canvas-placeholder">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <h3>Area Citra Inspeksi Siap</h3>
+                            <p>Pilih mode inspeksi di panel kiri dan unggah citra untuk memulai evaluasi otomatis.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Engineering Assessment & Recommendation Panel -->
+            @if (latestResult != null)
+            {
+                <div class="assessment-card">
+                    <div class="assessment-header">
+                        <div class="severity-badge-box">
+                            <span class="assessment-caption">Klasifikasi Integritas Material (NACE / ISO 12944)</span>
+                            <div class="badge-grade @GetGradeBadgeClass(latestResult.SeverityGrade)">
+                                TINGKAT KEPARAHAN: @latestResult.SeverityGrade?.ToUpper()
+                            </div>
+                        </div>
+
+                        <div class="metrics-summary">
+                            <div class="metric-item">
+                                <span>Titik Korosi</span>
+                                <strong>@latestResult.DetectionCount</strong>
+                            </div>
+                            <div class="metric-item">
+                                <span>Luas Terbesar</span>
+                                <strong class="text-danger">@latestResult.MaxAreaPercentage.ToString("0.0")%</strong>
+                            </div>
+                            <div class="metric-item">
+                                <span>Tag Aset</span>
+                                <strong>@latestResult.EquipmentTag</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="protocol-box">
+                        <h5>Rekomendasi Rekayasa & Tindakan Korektif:</h5>
+                        <p>@latestResult.Recommendation</p>
+                    </div>
+
+                    <!-- SAP PM Work Order Section -->
+                    <div class="wo-section">
+                        <div class="wo-header">
+                            <div class="wo-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <strong>Integrasi Work Order SAP Plant Maintenance (PM)</strong>
+                            </div>
+                            <span class="wo-status-tag">@latestResult.WorkOrderStatus</span>
+                        </div>
+
+                        <div class="wo-body">
+                            <div class="wo-inputs">
+                                <input type="text" @bind="inputWorkOrderNumber" placeholder="Nomor Work Order (misal: WO-RU6-2026-0042)" />
+                                <button class="btn-wo-dispatch" @onclick="DispatchWorkOrder" disabled="@isDispatching">
+                                    @(isDispatching ? "Menyimpan..." : "Update / Terbitkan WO")
+                                </button>
+                            </div>
+                            @if (!string.IsNullOrEmpty(latestResult.WorkOrderNumber))
+                            {
+                                <small class="wo-hint">Work Order Terdaftar: <strong>@latestResult.WorkOrderNumber</strong></small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
 
+<!-- Dossier Modal Component -->
+<PertaminaInspectionDossier IsOpen="@isDossierOpen"
+                            IsOpenChanged="@(val => isDossierOpen = val)"
+                            SessionData="@selectedDossierData" />
 
 @code {
+    private string activeMode = "patrol"; // "patrol", "drone", "cctv"
+
+    // Metadata Fields
+    private string unitName = "RU VI Balongan";
+    private string area = "CDU-01 Process Area";
+    private string equipmentTag = "11-TK-102A";
+    private string equipmentType = "Process Piping (API 570)";
+    private string inspectorName = "Pratama Bayu";
+    private string inspectorNip = "NIP. 782419";
+    private string notes = "";
+
+    // Drone Batch Mode State
+    private string droneMissionName = "UAV-RU6-PIPE-RACK-NORTH-OCT2026";
+    private bool isBatchProcessing = false;
+    private int batchTotalCount = 0;
+    private int batchProcessedCount = 0;
+    private int batchProgressPercent => batchTotalCount == 0 ? 0 : (int)((batchProcessedCount / (float)batchTotalCount) * 100);
+    private List<BatchItemResult> batchResults = new();
+
+    // CCTV Mode State
+    private string selectedCctvStation = "CAM-RU6-CDU-01";
+    private string selectedCctvSlot = "08:00 WIB";
+
+    // Viewport & Detection State
     private ElementReference imageElement;
     private string? imageDataUrl;
     private List<DetectionResult> detections = new();
+    private DetectionResponse? latestResult;
     private bool isLoading = false;
     private string? errorMessage;
+    private string? successMessage;
     private float originalWidth = 1;
     private float originalHeight = 1;
+
+    // Layer toggles
+    private bool showBoundingBoxes = true;
+    private bool showMasks = true;
+    private bool showLabels = true;
+
+    // Work Order State
+    private string inputWorkOrderNumber = "";
+    private bool isDispatching = false;
+
+    // Dossier Modal
+    private bool isDossierOpen = false;
+    private PertaminaInspectionDossier.DossierDataDto? selectedDossierData;
+
+    private void SetMode(string mode)
+    {
+        activeMode = mode;
+        if (mode == "cctv")
+        {
+            OnCctvStationChanged();
+        }
+    }
+
+    private void OnCctvStationChanged()
+    {
+        if (selectedCctvStation == "CAM-RU6-CDU-01")
+        {
+            unitName = "RU VI Balongan";
+            area = "CDU-01 Pipe Rack North";
+            equipmentTag = "PIPE-4\"-HC-1004";
+            equipmentType = "Process Piping (API 570)";
+        }
+        else if (selectedCctvStation == "CAM-RU6-TK-08")
+        {
+            unitName = "RU VI Balongan";
+            area = "Spherical Tank Farm B";
+            equipmentTag = "11-TK-108";
+            equipmentType = "Storage Tank (API 653)";
+        }
+        else if (selectedCctvStation == "CAM-RU4-RFCC-02")
+        {
+            unitName = "RU IV Cilacap";
+            area = "RFCC Regenerator Unit";
+            equipmentTag = "V-201-REGEN";
+            equipmentType = "Pressure Vessel (API 510)";
+        }
+        else
+        {
+            unitName = "Pertamina Hulu Rokan (PHR)";
+            area = "Wellpad Bravo Manifold";
+            equipmentTag = "MNF-WP-05";
+            equipmentType = "Process Piping (API 570)";
+        }
+    }
 
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
@@ -69,46 +476,263 @@
         isLoading = true;
         detections.Clear();
         errorMessage = null;
-
-        var buffer = new byte[file.Size];
-        await file.OpenReadStream(maxAllowedSize: 10_000_000).ReadAsync(buffer);
-        imageDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
-
-        using var content = new MultipartFormDataContent();
-        using var fileContent = new ByteArrayContent(buffer);
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-        content.Add(fileContent, "image", file.Name);
+        successMessage = null;
 
         try
         {
-            var response = await Http.PostAsync("api/corrosion/detect", content);
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(maxAllowedSize: 15_000_000).ReadAsync(buffer);
+            imageDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+
+            var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(buffer);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "image", file.Name);
+
+            string method = activeMode switch
+            {
+                "drone" => "Survei Drone / UAV",
+                "cctv" => $"Snapshot Berkala NVR ({selectedCctvStation})",
+                _ => "Patroli Lapangan (Tablet)"
+            };
+
+            content.Add(new StringContent("upload"), "sourceType");
+            content.Add(new StringContent(unitName), "unitName");
+            content.Add(new StringContent(area), "area");
+            content.Add(new StringContent(equipmentTag), "equipmentTag");
+            content.Add(new StringContent(equipmentType), "equipmentType");
+            content.Add(new StringContent(method), "inspectionMethod");
+            content.Add(new StringContent(inspectorName), "inspectorName");
+            content.Add(new StringContent(inspectorNip), "inspectorNip");
+            if (!string.IsNullOrEmpty(notes)) content.Add(new StringContent(notes), "notes");
+
+            var http = HttpClientFactory.CreateClient("API");
+            var response = await http.PostAsync("api/corrosion/detect", content);
+
+            content.Dispose();
+            fileContent.Dispose();
 
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();
                 if (result != null)
                 {
+                    latestResult = result;
                     detections = result.Detections;
                     originalWidth = result.ImageWidth;
                     originalHeight = result.ImageHeight;
+                    inputWorkOrderNumber = result.WorkOrderNumber ?? "";
+                    successMessage = $"Analisis selesai. Terdeteksi {result.DetectionCount} area korosi dengan keparahan {result.SeverityGrade}.";
                 }
             }
             else
             {
-                errorMessage = $"Server returned {(int)response.StatusCode} {response.ReasonPhrase}";
+                errorMessage = "Gagal memproses gambar pada server API.";
             }
-        }
-        catch (System.Net.Http.HttpRequestException hre)
-        {
-            errorMessage = "Unable to reach backend API: " + hre.Message;
         }
         catch (Exception ex)
         {
-            errorMessage = "Error while sending image: " + ex.Message;
+            errorMessage = $"Terjadi kesalahan: {ex.Message}";
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private async Task OnBatchFilesSelected(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(30);
+        if (!files.Any()) return;
+
+        batchTotalCount = files.Count;
+        batchProcessedCount = 0;
+        isBatchProcessing = true;
+        batchResults.Clear();
+        errorMessage = null;
+
+        var http = HttpClientFactory.CreateClient("API");
+
+        foreach (var file in files)
+        {
+            try
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(maxAllowedSize: 15_000_000).ReadAsync(buffer);
+
+                var content = new MultipartFormDataContent();
+                var fileContent = new ByteArrayContent(buffer);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                content.Add(fileContent, "image", file.Name);
+
+                content.Add(new StringContent("upload"), "sourceType");
+                content.Add(new StringContent(unitName), "unitName");
+                content.Add(new StringContent($"UAV Koridor {droneMissionName}"), "area");
+                content.Add(new StringContent($"UAV-FRM-{batchProcessedCount + 1}"), "equipmentTag");
+                content.Add(new StringContent("Struktur Pipe Rack"), "equipmentType");
+                content.Add(new StringContent($"Survei Drone / UAV ({droneMissionName})"), "inspectionMethod");
+                content.Add(new StringContent(inspectorName), "inspectorName");
+                content.Add(new StringContent(inspectorNip), "inspectorNip");
+
+                var res = await http.PostAsync("api/corrosion/detect", content);
+                if (res.IsSuccessStatusCode)
+                {
+                    var data = await res.Content.ReadFromJsonAsync<DetectionResponse>();
+                    if (data != null)
+                    {
+                        batchResults.Add(new BatchItemResult
+                        {
+                            Id = data.Id,
+                            FileName = file.Name,
+                            DetectionCount = data.DetectionCount,
+                            MaxArea = data.MaxAreaPercentage,
+                            Severity = data.SeverityGrade ?? "Low",
+                            Response = data,
+                            ImageBase64 = Convert.ToBase64String(buffer)
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error batch item: {ex.Message}");
+            }
+            finally
+            {
+                batchProcessedCount++;
+                StateHasChanged();
+            }
+        }
+
+        isBatchProcessing = false;
+        successMessage = $"Misi UAV berhasil memproses {batchResults.Count} frame foto.";
+
+        // Automatically select the most severe item to display
+        var topSevere = batchResults.OrderByDescending(b => b.MaxArea).FirstOrDefault();
+        if (topSevere != null)
+        {
+            SelectBatchItem(topSevere);
+        }
+    }
+
+    private void SelectBatchItem(BatchItemResult item)
+    {
+        latestResult = item.Response;
+        detections = item.Response.Detections;
+        originalWidth = item.Response.ImageWidth;
+        originalHeight = item.Response.ImageHeight;
+        imageDataUrl = $"data:image/jpeg;base64,{item.ImageBase64}";
+        inputWorkOrderNumber = item.Response.WorkOrderNumber ?? "";
+    }
+
+    private async Task DispatchWorkOrder()
+    {
+        if (latestResult == null) return;
+        isDispatching = true;
+        try
+        {
+            var http = HttpClientFactory.CreateClient("API");
+            var updatePayload = new
+            {
+                Status = "WO-Diterbitkan (SAP PM)",
+                WorkOrderNumber = string.IsNullOrWhiteSpace(inputWorkOrderNumber) ? $"WO-RU6-{DateTime.Now:yyyyMMdd}-{Random.Shared.Next(100, 999)}" : inputWorkOrderNumber,
+                Notes = $"Diterbitkan oleh {inspectorName} ({inspectorNip})"
+            };
+
+            var res = await http.PutAsJsonAsync($"api/corrosion/session/{latestResult.Id}/work-order", updatePayload);
+            if (res.IsSuccessStatusCode)
+            {
+                latestResult.WorkOrderStatus = updatePayload.Status;
+                latestResult.WorkOrderNumber = updatePayload.WorkOrderNumber;
+                inputWorkOrderNumber = updatePayload.WorkOrderNumber;
+                successMessage = $"Work Order SAP PM berhasil didaftarkan: {latestResult.WorkOrderNumber}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Gagal menyimpan status Work Order: {ex.Message}";
+        }
+        finally
+        {
+            isDispatching = false;
+        }
+    }
+
+    private void OpenDossierFromLatest()
+    {
+        if (latestResult == null) return;
+
+        // Strip data:image prefix if present
+        string? rawBase64 = imageDataUrl;
+        if (rawBase64 != null && rawBase64.Contains(","))
+        {
+            rawBase64 = rawBase64.Substring(rawBase64.IndexOf(",") + 1);
+        }
+
+        selectedDossierData = new PertaminaInspectionDossier.DossierDataDto
+        {
+            Id = latestResult.Id,
+            Timestamp = latestResult.Timestamp,
+            SourceType = latestResult.SourceType,
+            ImageWidth = latestResult.ImageWidth,
+            ImageHeight = latestResult.ImageHeight,
+            DetectionCount = latestResult.DetectionCount,
+            OriginalImageBase64 = rawBase64,
+            UnitName = latestResult.UnitName,
+            Area = latestResult.Area,
+            EquipmentTag = latestResult.EquipmentTag,
+            EquipmentType = latestResult.EquipmentType,
+            InspectionMethod = latestResult.InspectionMethod,
+            InspectorName = latestResult.InspectorName,
+            InspectorNip = latestResult.InspectorNip,
+            SeverityGrade = latestResult.SeverityGrade,
+            WorkOrderStatus = latestResult.WorkOrderStatus,
+            WorkOrderNumber = latestResult.WorkOrderNumber,
+            Notes = latestResult.Notes,
+            Recommendation = latestResult.Recommendation,
+            MaxAreaPercentage = latestResult.MaxAreaPercentage,
+            Items = detections.Select(d => new PertaminaInspectionDossier.DossierItemDto
+            {
+                X = d.X,
+                Y = d.Y,
+                Width = d.Width,
+                Height = d.Height,
+                Confidence = d.Confidence,
+                AreaPercentage = d.AreaPercentage,
+                MaskImageBase64 = d.MaskImageBase64
+            }).ToList()
+        };
+
+        isDossierOpen = true;
+    }
+
+    private string GetBoxColor(float area)
+    {
+        if (area >= 30) return "#dc2626";
+        if (area >= 15) return "#ea580c";
+        if (area >= 5) return "#ca8a04";
+        return "#16a34a";
+    }
+
+    private string GetGradeBadgeClass(string? grade)
+    {
+        return grade?.ToLower() switch
+        {
+            "critical" => "grade-critical",
+            "severe" => "grade-severe",
+            "moderate" => "grade-moderate",
+            _ => "grade-low"
+        };
+    }
+
+    public class BatchItemResult
+    {
+        public int Id { get; set; }
+        public string FileName { get; set; } = "";
+        public int DetectionCount { get; set; }
+        public float MaxArea { get; set; }
+        public string Severity { get; set; } = "Low";
+        public DetectionResponse Response { get; set; } = new();
+        public string ImageBase64 { get; set; } = "";
     }
 }

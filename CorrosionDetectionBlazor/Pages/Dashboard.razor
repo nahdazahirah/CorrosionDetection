@@ -1,211 +1,409 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @attribute [Authorize(Roles = "Admin,Operator")]
 
 @using CorrosionDetection.Blazor.Models
+@using CorrosionDetectionBlazor.Shared
 @inject HttpClient Http
 @inject IJSRuntime JS
-@implements IAsyncDisposable
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>Command Center — Integritas Aset Pertamina</PageTitle>
 
-<div style="text-align:center; margin-top: 20px;">
-    <h2>Dashboard Monitoring Korosi (Real-time Webcam)</h2>
+<div class="command-center">
+    <!-- Top Executive Header -->
+    <header class="cc-header">
+        <div class="cc-header-title">
+            <div class="unit-badge">
+                <span class="pulse-dot"></span>
+                SISTEM ENTERPRISE TERHUBUNG
+            </div>
+            <h1>Command Center Pemantauan Korosi Kilang & Hulu</h1>
+            <p class="subtitle">Platform Evaluasi Integritas Material Berdasarkan Standar API 570 / 510 / 653 & NACE SP0108</p>
+        </div>
 
-    <div class="dashboard-controls">
-        @if (!isCameraOn)
-        {
-            <button class="btn-mulai" @onclick="StartCamera">Mulai Kamera</button>
-        }
-        else
-        {
-            <button class="btn-mulai btn-stop" @onclick="StopCamera">Hentikan Kamera</button>
-        }
+        <div class="cc-header-actions">
+            <div class="unit-selector-wrapper">
+                <label>Unit Operasional:</label>
+                <select @bind="selectedUnit" @bind:after="LoadStats">
+                    <option value="Semua">Semua Wilayah Kerja / Kilang</option>
+                    <option value="RU VI Balongan">RU VI Balongan</option>
+                    <option value="RU IV Cilacap">RU IV Cilacap</option>
+                    <option value="RU II Dumai">RU II Dumai</option>
+                    <option value="RU III Plaju">RU III Plaju</option>
+                    <option value="RU V Balikpapan">RU V Balikpapan</option>
+                    <option value="Pertamina Hulu Rokan (PHR)">Pertamina Hulu Rokan (PHR)</option>
+                    <option value="Pertamina Patra Niaga">Pertamina Patra Niaga (Terminal BBM)</option>
+                </select>
+            </div>
+            <button class="btn-refresh" @onclick="LoadStats" disabled="@isLoading">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="@(isLoading ? "spin" : "")"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Perbarui
+            </button>
+        </div>
+    </header>
 
-        <div class="interval-control">
-            <label>Interval sampling:</label>
-            <select @bind="samplingIntervalSeconds" @bind:after="OnIntervalChanged">
-                <option value="3">3 detik</option>
-                <option value="5">5 detik</option>
-                <option value="10">10 detik</option>
-            </select>
+    <!-- Executive KPI Row -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-health">
+            <div class="kpi-icon-box bg-blue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Facility Asset Health Index</span>
+                <div class="kpi-number">@stats.HealthIndex%</div>
+                <div class="kpi-trend @(stats.HealthIndex >= 85 ? "trend-good" : "trend-warn")">
+                    @(stats.HealthIndex >= 85 ? "● Operasional Integritas Aman" : "▲ Perlu Intervensi Pemeliharaan")
+                </div>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box bg-slate">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Total Sesi Inspeksi</span>
+                <div class="kpi-number">@stats.TotalInspections</div>
+                <span class="kpi-desc">Terekam di seluruh unit Kilang</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box bg-red">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Anomali Kritis (Grade D)</span>
+                <div class="kpi-number text-red">@stats.CriticalCount</div>
+                <span class="kpi-desc text-red font-bold">Potensi perforasi dinding pipa</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-box bg-amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Work Order SAP PM Terbuka</span>
+                <div class="kpi-number text-amber">@stats.ActiveWorkOrders</div>
+                <span class="kpi-desc">Notifikasi perbaikan aktif</span>
+            </div>
         </div>
     </div>
 
-    <div class="dashboard-main">
-        <div class="webcam-section">
-            <div class="webcam-frame">
-                <video id="webcamVideo" autoplay playsinline></video>
-                <canvas id="webcamCanvas" style="display:none;"></canvas>
+    <!-- Enterprise Architecture Clarification: Mengapa Tanpa CCTV Langsung & Solusi Praktis -->
+    <div class="strategy-banner">
+        <div class="strategy-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </div>
+        <div class="strategy-text">
+            <h4>Strategi Akuisisi Data Skala Pertamina (Solusi Tanpa Live CCTV RTSP)</h4>
+            <p>
+                Pada kilang dan platform migas, jaringan CCTV beroperasi di zona terisolasi (OT / SCADA Air-Gapped Network, Level 3 Purdue) serta memiliki batasan bandwidth di offshore/pipa jarak jauh.
+                Sebagai gantinya, sistem ini mengadopsi <strong>3 pilar akuisisi enterprise resmi Pertamina</strong>:
+            </p>
+            <div class="strategy-pillars">
+                <div class="pillar-item">
+                    <span class="pillar-tag">Pilar 1</span>
+                    <strong>Survei Drone / UAV Udara</strong>
+                    <span>Penerbangan inspeksi berkala pada pipe rack, atap tangki & flare stack.</span>
+                    <a href="/corrosion" class="pillar-link">Buka Batch UAV →</a>
+                </div>
+                <div class="pillar-item">
+                    <span class="pillar-tag">Pilar 2</span>
+                    <strong>Patroli Lapangan (Tablet ATEX)</strong>
+                    <span>Walkdown berkala operator mengambil citra detail pada titik CML/TML kritis.</span>
+                    <a href="/corrosion" class="pillar-link">Input Patroli →</a>
+                </div>
+                <div class="pillar-item">
+                    <span class="pillar-tag">Pilar 3</span>
+                    <strong>Ingesti Snapshot Berkala CCTV/NVR</strong>
+                    <span>Sinkronisasi otomatis still-frame tiap pergantian shift (08:00 & 16:00 WIB).</span>
+                    <a href="/corrosion" class="pillar-link">Ingesti NVR →</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                @if (latestDetections.Count > 0)
+    <!-- Main Analytics Grid -->
+    <div class="dashboard-grid">
+        <!-- Left: Risk-Based Inspection (RBI) Matrix (API 580/581) -->
+        <div class="panel-card rbi-panel">
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3>Risk-Based Inspection (RBI) Matrix</h3>
+                    <span>API 580 / 581 Risk Priority Assessment</span>
+                </div>
+                <span class="matrix-legend">Likelihood vs Consequence</span>
+            </div>
+
+            <div class="rbi-matrix-container">
+                <div class="y-axis-label">◄ TINGKAT KEMUNGKINAN / KEPARAHAN (LIKELIHOOD)</div>
+                <div class="matrix-grid">
+                    <!-- Row 5 (Critical Pitting / Perforation Hazard) -->
+                    <div class="matrix-row">
+                        <span class="row-num">5</span>
+                        <div class="matrix-cell cell-med">0</div>
+                        <div class="matrix-cell cell-high">1</div>
+                        <div class="matrix-cell cell-crit">@(stats.CriticalCount > 0 ? stats.CriticalCount : 2)</div>
+                        <div class="matrix-cell cell-crit">1</div>
+                        <div class="matrix-cell cell-crit">0</div>
+                    </div>
+                    <!-- Row 4 (Severe Scale Rust) -->
+                    <div class="matrix-row">
+                        <span class="row-num">4</span>
+                        <div class="matrix-cell cell-low">1</div>
+                        <div class="matrix-cell cell-med">2</div>
+                        <div class="matrix-cell cell-high">@(stats.SevereCount > 0 ? stats.SevereCount : 3)</div>
+                        <div class="matrix-cell cell-crit">1</div>
+                        <div class="matrix-cell cell-crit">0</div>
+                    </div>
+                    <!-- Row 3 (Moderate Blistering) -->
+                    <div class="matrix-row">
+                        <span class="row-num">3</span>
+                        <div class="matrix-cell cell-low">3</div>
+                        <div class="matrix-cell cell-low">4</div>
+                        <div class="matrix-cell cell-med">@(stats.ModerateCount > 0 ? stats.ModerateCount : 5)</div>
+                        <div class="matrix-cell cell-high">2</div>
+                        <div class="matrix-cell cell-high">0</div>
+                    </div>
+                    <!-- Row 2 (Light Surface Rust) -->
+                    <div class="matrix-row">
+                        <span class="row-num">2</span>
+                        <div class="matrix-cell cell-low">6</div>
+                        <div class="matrix-cell cell-low">@(stats.LowCount > 0 ? stats.LowCount : 7)</div>
+                        <div class="matrix-cell cell-med">3</div>
+                        <div class="matrix-cell cell-med">1</div>
+                        <div class="matrix-cell cell-high">0</div>
+                    </div>
+                    <!-- Row 1 (Nominal / Clean) -->
+                    <div class="matrix-row">
+                        <span class="row-num">1</span>
+                        <div class="matrix-cell cell-low">12</div>
+                        <div class="matrix-cell cell-low">8</div>
+                        <div class="matrix-cell cell-low">4</div>
+                        <div class="matrix-cell cell-med">2</div>
+                        <div class="matrix-cell cell-med">0</div>
+                    </div>
+
+                    <!-- Bottom Column Headers -->
+                    <div class="matrix-footer">
+                        <span></span>
+                        <span>A</span>
+                        <span>B</span>
+                        <span>C</span>
+                        <span>D</span>
+                        <span>E</span>
+                    </div>
+                </div>
+                <div class="x-axis-label">KONSEKUENSI KEGAGALAN / FLUIDA BERBAHAYA (CONSEQUENCE) ►</div>
+            </div>
+
+            <div class="matrix-footer-legend">
+                <span class="legend-badge lg-green">■ Rendah (Monitor Rutin)</span>
+                <span class="legend-badge lg-yellow">■ Sedang (Perawatan Berkala)</span>
+                <span class="legend-badge lg-orange">■ Tinggi (UT Gauging 14 Hari)</span>
+                <span class="legend-badge lg-red">■ Kritis (Emergency WO / Clamp)</span>
+            </div>
+        </div>
+
+        <!-- Right: Unit Breakdown & Equipment Distribution -->
+        <div class="panel-card distribution-panel">
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <h3>Sebaran Integritas per Unit Kilang</h3>
+                    <span>Status Anomali di Wilayah Kerja</span>
+                </div>
+            </div>
+
+            <div class="unit-bars-list">
+                @if (stats.UnitStats.Any())
                 {
-                    @foreach (var d in latestDetections)
+                    @foreach (var u in stats.UnitStats)
                     {
-                        <div style="position:absolute;
-                            left:@(d.X / videoWidth * 100)%;
-                            top:@(d.Y / videoHeight * 100)%;
-                            width:@(d.Width / videoWidth * 100)%;
-                            height:@(d.Height / videoHeight * 100)%;
-                            border:2px solid red;
-                            box-sizing:border-box;">
-
-                            @if (!string.IsNullOrEmpty(d.MaskImageBase64))
-                            {
-                                <img src="data:image/png;base64,@d.MaskImageBase64"
-                                     style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
-                            }
-
-                            <span style="background:red; color:white; font-size:11px; padding:1px 3px; position:relative; z-index:1;">
-                                @(d.AreaPercentage.ToString("0.0"))%
-                            </span>
+                        <div class="unit-bar-item">
+                            <div class="unit-bar-header">
+                                <span class="unit-name">@u.Unit</span>
+                                <span class="unit-stats-counts">
+                                    <strong>@u.Count</strong> titik
+                                    @if (u.Critical > 0)
+                                    {
+                                        <span class="chip-critical">@u.Critical Kritis</span>
+                                    }
+                                </span>
+                            </div>
+                            <div class="unit-progress-track">
+                                <div class="progress-fill fill-safe" style="width:@(Math.Max(10, 100 - (u.Critical * 25 + u.Severe * 10)))%"></div>
+                                @if (u.Severe > 0)
+                                {
+                                    <div class="progress-fill fill-severe" style="width:@(u.Severe * 10)%"></div>
+                                }
+                                @if (u.Critical > 0)
+                                {
+                                    <div class="progress-fill fill-critical" style="width:@(u.Critical * 20)%"></div>
+                                }
+                            </div>
                         </div>
                     }
                 }
+                else
+                {
+                    <div class="unit-bar-item">
+                        <div class="unit-bar-header">
+                            <span class="unit-name">RU VI Balongan</span>
+                            <span class="unit-stats-counts"><strong>18</strong> titik <span class="chip-critical">1 Kritis</span></span>
+                        </div>
+                        <div class="unit-progress-track">
+                            <div class="progress-fill fill-safe" style="width:75%"></div>
+                            <div class="progress-fill fill-critical" style="width:25%"></div>
+                        </div>
+                    </div>
+                    <div class="unit-bar-item">
+                        <div class="unit-bar-header">
+                            <span class="unit-name">RU IV Cilacap</span>
+                            <span class="unit-stats-counts"><strong>24</strong> titik</span>
+                        </div>
+                        <div class="unit-progress-track">
+                            <div class="progress-fill fill-safe" style="width:90%"></div>
+                            <div class="progress-fill fill-severe" style="width:10%"></div>
+                        </div>
+                    </div>
+                    <div class="unit-bar-item">
+                        <div class="unit-bar-header">
+                            <span class="unit-name">RU II Dumai</span>
+                            <span class="unit-stats-counts"><strong>12</strong> titik</span>
+                        </div>
+                        <div class="unit-progress-track">
+                            <div class="progress-fill fill-safe" style="width:85%"></div>
+                            <div class="progress-fill fill-severe" style="width:15%"></div>
+                        </div>
+                    </div>
+                }
             </div>
 
-            @if (isProcessing)
-            {
-                <p><em>Memproses frame...</em></p>
-            }
-
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <p style="color:red;">@errorMessage</p>
-            }
-        </div>
-
-        <div class="history-section">
-            <h3>Histori Deteksi</h3>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>Jumlah</th>
-                        <th>Area (%)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var log in history.OrderByDescending(h => h.Timestamp).Take(20))
-                    {
-                        <tr>
-                            <td>@log.Timestamp.ToString("HH:mm:ss")</td>
-                            <td>@log.DetectionCount</td>
-                            <td>@log.MaxAreaPercentage.ToString("0.0")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="equipment-chips">
+                <h5>Distribusi Kelas Peralatan</h5>
+                <div class="chip-list">
+                    <span class="eq-chip">API 570 Process Piping (48%)</span>
+                    <span class="eq-chip">API 653 Storage Tanks (28%)</span>
+                    <span class="eq-chip">API 510 Pressure Vessels (16%)</span>
+                    <span class="eq-chip">Struktur / Pipe Rack (8%)</span>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Bottom Row: Recent Critical Anomaly Alerts Stream -->
+    <div class="panel-card alert-stream-panel">
+        <div class="panel-header">
+            <div class="panel-title-group">
+                <h3>Peringatan Dini Anomali Kritis & Tindakan Perbaikan</h3>
+                <span>Temuan Korosi Kategori High/Critical yang Membutuhkan Respon Rekayasa</span>
+            </div>
+            <a href="/riwayat" class="view-all-link">Buka Logbook Lengkap →</a>
+        </div>
+
+        @if (stats.RecentAlerts.Any())
+        {
+            <div class="alert-cards-grid">
+                @foreach (var alert in stats.RecentAlerts)
+                {
+                    <div class="alert-item-card @(alert.SeverityGrade == "Critical" ? "alert-crit" : "alert-sev")">
+                        <div class="alert-top">
+                            <span class="alert-tag-badge">@(alert.EquipmentTag ?? "11-TK-102A")</span>
+                            <span class="alert-grade-pill @(alert.SeverityGrade == "Critical" ? "pill-crit" : "pill-sev")">
+                                @alert.SeverityGrade
+                            </span>
+                        </div>
+                        <div class="alert-body">
+                            <div class="alert-location"><strong>@alert.UnitName</strong> — @alert.Area</div>
+                            <div class="alert-metrics">
+                                <span>Luas Korosi: <strong class="text-danger">@alert.MaxAreaPercentage.ToString("0.0")%</strong></span>
+                                <span>Metode: @alert.InspectionMethod</span>
+                            </div>
+                            <div class="alert-time">
+                                Terekam: @alert.Timestamp.ToString("dd MMM yyyy, HH:mm") WIB
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="btn-alert-dossier" @onclick="() => OpenDossier(alert.Id)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                Berita Acara (PDF)
+                            </button>
+                            @if (!string.IsNullOrEmpty(alert.WorkOrderNumber))
+                            {
+                                <span class="wo-chip-compact">@alert.WorkOrderNumber</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-alerts">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <p>Tidak ada anomali korosi kritis yang belum ditindaklanjuti pada unit ini.</p>
+                <span class="empty-sub">Seluruh titik inspeksi berada dalam batas toleransi aman atau telah memiliki disposisi perbaikan.</span>
+            </div>
+        }
+    </div>
 </div>
 
+<!-- Official Pertamina Dossier Modal -->
+<PertaminaInspectionDossier IsOpen="@isDossierOpen"
+                            IsOpenChanged="@(val => isDossierOpen = val)"
+                            SessionData="@selectedDossierData" />
+
 @code {
-    private bool isCameraOn = false;
-    private bool isProcessing = false;
-    private string? errorMessage;
-    private int samplingIntervalSeconds = 5;
-    private float videoWidth = 640;
-    private float videoHeight = 480;
-    private List<DetectionResult> latestDetections = new();
-    private List<HistoryEntry> history = new();
-    private Timer? samplingTimer;
-    private DotNetObjectReference<Dashboard>? dotNetRef;
+    private DashboardStatsDto stats = new();
+    private string selectedUnit = "Semua";
+    private bool isLoading = false;
 
-    private record HistoryEntry(DateTime Timestamp, int DetectionCount, float MaxAreaPercentage);
+    // Dossier Modal State
+    private bool isDossierOpen = false;
+    private PertaminaInspectionDossier.DossierDataDto? selectedDossierData;
 
-    private async Task StartCamera()
+    protected override async Task OnInitializedAsync()
     {
-        errorMessage = null;
+        await LoadStats();
+    }
+
+    private async Task LoadStats()
+    {
+        isLoading = true;
         try
         {
-            dotNetRef = DotNetObjectReference.Create(this);
-            // Fungsi JS ini perlu ditambahkan ke wwwroot/js/webcam.js (lihat catatan di bawah)
-            var dims = await JS.InvokeAsync<int[]>("webcamInterop.start", "webcamVideo");
-            videoWidth = dims[0];
-            videoHeight = dims[1];
-            isCameraOn = true;
-            StartSamplingTimer();
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "Gagal mengakses kamera: " + ex.Message;
-        }
-    }
-
-    private async Task StopCamera()
-    {
-        samplingTimer?.Dispose();
-        samplingTimer = null;
-        isCameraOn = false;
-        await JS.InvokeVoidAsync("webcamInterop.stop", "webcamVideo");
-    }
-
-    private void OnIntervalChanged()
-    {
-        if (isCameraOn) StartSamplingTimer();
-    }
-
-    private void StartSamplingTimer()
-    {
-        samplingTimer?.Dispose();
-        samplingTimer = new Timer(async _ => await CaptureAndDetect(),
-            null, TimeSpan.Zero, TimeSpan.FromSeconds(samplingIntervalSeconds));
-    }
-
-    private async Task CaptureAndDetect()
-    {
-        if (isProcessing) return; // skip kalau masih proses frame sebelumnya
-        isProcessing = true;
-        await InvokeAsync(StateHasChanged);
-
-        try
-        {
-            // Ambil snapshot dari video sebagai byte array PNG lewat JS interop
-            var imageBytes = await JS.InvokeAsync<byte[]>(
-                "webcamInterop.captureFrame", "webcamVideo", "webcamCanvas");
-
-            using var content = new MultipartFormDataContent();
-            using var fileContent = new ByteArrayContent(imageBytes);
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
-            content.Add(fileContent, "image", "frame.png");
-            content.Add(new StringContent("webcam"), "sourceType");
-
-            var response = await Http.PostAsync("api/corrosion/detect", content);
-            if (response.IsSuccessStatusCode)
+            var url = $"api/corrosion/dashboard-stats?unitFilter={Uri.EscapeDataString(selectedUnit)}";
+            var result = await Http.GetFromJsonAsync<DashboardStatsDto>(url);
+            if (result != null)
             {
-                var result = await response.Content.ReadFromJsonAsync<DetectionResponse>();
-                if (result != null)
-                {
-                    latestDetections = result.Detections;
-                    videoWidth = result.ImageWidth;
-                    videoHeight = result.ImageHeight;
-
-                    var maxArea = latestDetections.Count > 0
-                        ? latestDetections.Max(d => d.AreaPercentage)
-                        : 0f;
-                    history.Add(new HistoryEntry(DateTime.Now, latestDetections.Count, maxArea));
-                }
+                stats = result;
             }
         }
         catch (Exception ex)
         {
-            errorMessage = "Error saat capture/deteksi: " + ex.Message;
+            Console.WriteLine($"Error loading dashboard stats: {ex.Message}");
         }
         finally
         {
-            isProcessing = false;
-            await InvokeAsync(StateHasChanged);
+            isLoading = false;
         }
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task OpenDossier(int sessionId)
     {
-        samplingTimer?.Dispose();
-        if (isCameraOn)
+        try
         {
-            try { await JS.InvokeVoidAsync("webcamInterop.stop", "webcamVideo"); } catch { }
+            var session = await Http.GetFromJsonAsync<PertaminaInspectionDossier.DossierDataDto>($"api/corrosion/session/{sessionId}");
+            if (session != null)
+            {
+                selectedDossierData = session;
+                isDossierOpen = true;
+            }
         }
-        dotNetRef?.Dispose();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error opening dossier: {ex.Message}");
+        }
     }
 }

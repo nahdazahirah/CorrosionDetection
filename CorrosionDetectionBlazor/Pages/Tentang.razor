@@ -1,64 +1,116 @@
-﻿@page "/tentang"
+@page "/tentang"
+
+<PageTitle>Tentang Sistem & Standar — Pertamina</PageTitle>
 
 <div class="tentang-page">
-    <div class="hero">
-        <h2>Corrosion Detection System</h2>
+    <div class="hero-tentang">
+        <span class="sub-badge">DOKUMENTASI SISTEM & KEPATUHAN STANDAR</span>
+        <h2>Pertamina Intelligent Corrosion Monitoring System (ICMS)</h2>
         <p class="hero-desc">
-            
+            Sistem terintegrasi untuk pemantauan degradasi material dan pencegahan kegagalan pipa/tangki pada kilang minyak dan fasilitas hulu Pertamina.
         </p>
     </div>
 
-    <div class="section">
-        <h3>Cara Kerja</h3>
+    <!-- 1. Enterprise Architecture: Kenapa Tanpa Live CCTV? -->
+    <div class="section-card">
+        <h3>1. Arsitektur Enterprise & Strategi Tanpa Live CCTV</h3>
         <p>
-            Aplikasi ini menggunakan model deep learning YOLOv8n-seg yang dilatih untuk mengenali
-            area korosi pada gambar peralatan industri. Setiap gambar yang diunggah atau ditangkap
-            dari webcam akan dianalisis, menghasilkan bounding box, mask segmentasi, dan persentase
-            luas area yang terindikasi korosi.
+            Dalam industri minyak dan gas (Oil &amp; Gas Refinery dan Offshore Platform), streaming video langsung (live RTSP) dari CCTV operasional jarang diterapkan langsung ke sistem analitik berbasis web karena:
+        </p>
+        <div class="architecture-grid">
+            <div class="arch-box">
+                <strong>Pemisahan Jaringan SCADA (Purdue Level 3/4)</strong>
+                <p>Jaringan CCTV pengawasan kilang terisolasi dalam segmen OT (Operational Technology) air-gapped untuk mencegah serangan siber pada DCS kilang.</p>
+            </div>
+            <div class="arch-box">
+                <strong>Keterbatasan Bandwidth Remote &amp; Offshore</strong>
+                <p>Platform anjungan lepas pantai dan stasiun pipa terpencil mengandalkan satelit/radio link yang diutamakan untuk data telemetri produksi kritis.</p>
+            </div>
+            <div class="arch-box">
+                <strong>Standar Keselamatan Intrinsik (ATEX / IECEx)</strong>
+                <p>Kamera di zona bahaya (Zone 1/Zone 2) fokus pada kestabilan pengawasan fisik, bukan kompresi video dinamis resolusi tinggi.</p>
+            </div>
+        </div>
+        <p class="arch-conclusion">
+            <strong>Solusi Nyata Skala Pertamina:</strong> Sistem ini menggunakan pendekatan <em>Scheduled Still-Frame Ingestion</em> (penarikan frame resolusi penuh per shift kerja) dikombinasikan dengan <em>Batch Survei Drone/UAV</em> dan <em>Patroli Lapangan Operator (Tablet ATEX)</em>. Pendekatan ini menghasilkan kualitas piksel jauh lebih tajam untuk kalkulasi luas korosi tanpa risiko keamanan jaringan.
         </p>
     </div>
 
-    <div class="section">
-        <h3>Fitur</h3>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <span class="feature-num">01</span>
-                <div>
-                    <strong>Deteksi dari Foto</strong>
-                    <p>Unggah gambar untuk mendapatkan hasil deteksi dan segmentasi korosi secara instan.</p>
-                </div>
+    <!-- 2. Standar Industri Yang Diadopsi -->
+    <div class="section-card">
+        <h3>2. Standar Rekayasa & Integritas Material</h3>
+        <div class="standards-table-wrapper">
+            <table class="standards-table">
+                <thead>
+                    <tr>
+                        <th>Standar Acuan</th>
+                        <th>Ruang Lingkup Aplikasi</th>
+                        <th>Kriteria Tindakan Sistem ICMS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>API 570</strong></td>
+                        <td>Pipa Proses Kilang (In-Service Piping Systems)</td>
+                        <td>Verifikasi laju korosi, ketebalan minimum dinding pipa (Tmin), dan peringatan risiko perforasi hidrokarbon.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API 653</strong></td>
+                        <td>Tangki Timbun Atmosferik (Storage Tanks)</td>
+                        <td>Inspeksi visual dinding pelat tangki (shell courses), atap tangki (roof plates), dan sambungan nozzle pengeluaran.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API 510</strong></td>
+                        <td>Bejana Tekan (Pressure Vessels & Separator)</td>
+                        <td>Evaluasi degradasi lokal pada sambungan las (welds) dan bejana pemroses tekanan tinggi.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API 580 / 581</strong></td>
+                        <td>Risk-Based Inspection (RBI)</td>
+                        <td>Pemetaan matrik 5x5: Kemungkinan Kegagalan (Likelihood) vs Konsekuensi Kegagalan (Consequence).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ISO 12944 / NACE SP0108</strong></td>
+                        <td>Proteksi Korosi dengan Lapisan Cat (Coating)</td>
+                        <td>Klasifikasi derajat karat Ri 1 (Permukaan ringan) hingga Ri 5 (Pitting mendalam & pengelupasan kerak tebal).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. Spesifikasi Model AI -->
+    <div class="section-card">
+        <h3>3. Spesifikasi Model Deep Learning (YOLOv8-Seg)</h3>
+        <div class="tech-spec-grid">
+            <div class="spec-card">
+                <span class="spec-num">640×640</span>
+                <span class="spec-label">Dimensi Input Tensor ONNX</span>
             </div>
-            <div class="feature-card">
-                <span class="feature-num">02</span>
-                <div>
-                    <strong>Monitoring Real-time</strong>
-                    <p>Pemantauan langsung melalui webcam dengan pengambilan sampel gambar secara berkala.</p>
-                </div>
+            <div class="spec-card">
+                <span class="spec-num">32 Coeffs</span>
+                <span class="spec-label">Prototipe Mask Segmentasi Instan</span>
             </div>
-            <div class="feature-card">
-                <span class="feature-num">03</span>
-                <div>
-                    <strong>Riwayat Deteksi</strong>
-                    <p>Seluruh hasil deteksi tersimpan dan dapat difilter berdasarkan tanggal, sumber, dan luas area.</p>
-                </div>
+            <div class="spec-card">
+                <span class="spec-num">77,3%</span>
+                <span class="spec-label">mAP50 Tingkat Presisi Deteksi</span>
+            </div>
+            <div class="spec-card">
+                <span class="spec-num">&lt; 150 ms</span>
+                <span class="spec-label">Waktu Inferensi per Citra Frame</span>
             </div>
         </div>
     </div>
 
-    <div class="section">
-        <h3>Teknologi yang Digunakan</h3>
-        <div class="tech-badges">
-            <span class="tech-badge">YOLOv8n-seg</span>
-            <span class="tech-badge">ONNX Runtime</span>
-            <span class="tech-badge">ASP.NET Core Web API</span>
-            <span class="tech-badge">Blazor WebAssembly</span>
-            <span class="tech-badge">Entity Framework Core</span>
-            <span class="tech-badge">SQL Server</span>
+    <!-- 4. Tim Pengembang & Kredit -->
+    <div class="footer-credit-card">
+        <div class="pertamina-brand-mini">
+            <span class="mark-blue"></span>
+            <span class="mark-green"></span>
+            <span class="mark-red"></span>
         </div>
-    </div>
-
-    <div class="footer-credit">
-        <p>Dikembangkan oleh <strong>Nahda Zahirah </strong> dan <strong> Alya Kinanti</strong> — Teknik Informatika, Universitas Riau</p>
-        <p class="footer-sub">Program MBKM Magang Mandiri, PT Pertamina Refinery Unit II Kota Dumai</p>
+        <h4>Pengembangan & Implementasi Sistem</h4>
+        <p>Dikembangkan oleh <strong>Nahda Zahirah</strong> dan <strong>Alya Kinanti</strong> — Teknik Informatika, Universitas Riau</p>
+        <p class="footer-sub">Program Magang Mandiri Berdampak (MBKM) di <strong>PT Pertamina Refinery Unit II — Kota Dumai</strong></p>
     </div>
 </div>

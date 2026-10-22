@@ -1,495 +1,456 @@
 .riwayat-page {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #1E293B;
-    max-width: 1100px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 32px 40px 60px;
-    background-color: #F8FAFC;
-    box-sizing: border-box;
+    padding: 1.5rem 2rem 3rem;
 }
 
-    .riwayat-page h2 {
-        margin: 0 0 6px;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #0F172A;
-    }
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
 
-.subtitle {
+.sub-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #002855;
+    background: #EBF2FA;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.header-titles h2 {
+    margin: 0.35rem 0 0.15rem;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #002855;
+}
+
+.header-titles p {
+    margin: 0;
+    font-size: 0.85rem;
     color: #64748B;
-    font-size: 0.875rem;
-    margin: 0 0 24px;
 }
 
-/* Toast konfirmasi & notifikasi */
-.confirmation-toast,
-.notification-toast {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    z-index: 1000;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-    border-radius: 12px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-.confirmation-toast {
+.btn-export-csv {
     display: flex;
     align-items: center;
-    gap: 14px;
-    max-width: min(460px, calc(100vw - 48px));
-    padding: 16px 18px;
-    background-color: #FFFFFF;
+    gap: 0.4rem;
+    background: #002855;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-export-csv:hover:not(:disabled) {
+    background: #001A38;
+}
+
+/* ================= TOOLBAR & FILTERS ================= */
+.toolbar {
+    background: #FFFFFF;
     border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 
-.toast-icon {
-    display: grid;
-    place-items: center;
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: #FEF3C7;
-    color: #B45309;
-    font-weight: 700;
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
 }
 
-.toast-content {
+.field {
     display: flex;
     flex-direction: column;
     gap: 3px;
     flex: 1;
+    min-width: 140px;
 }
 
-    .toast-content strong {
-        color: #0F172A;
-        font-size: 0.9rem;
-    }
-
-    .toast-content span {
-        color: #64748B;
-        font-size: 0.82rem;
-    }
-
-.toast-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.toast-cancel-btn,
-.toast-confirm-btn {
-    border-radius: 8px;
-    padding: 7px 14px;
-    cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 0.8rem;
+.field label {
+    font-size: 0.75rem;
     font-weight: 600;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.toast-cancel-btn {
-    background-color: #FFFFFF;
-    border: 1px solid #CBD5E1;
     color: #475569;
 }
 
-    .toast-cancel-btn:hover {
-        background-color: #F1F5F9;
-    }
-
-.toast-confirm-btn {
-    background-color: #DC2626;
-    border: none;
-    color: white;
+.field select,
+.field input {
+    padding: 0.45rem 0.65rem;
+    border-radius: 6px;
+    border: 1px solid #CBD5E1;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: #0F172A;
+    outline: none;
 }
 
-    .toast-confirm-btn:hover {
-        background-color: #B91C1C;
-    }
+.field select:focus,
+.field input:focus {
+    border-color: #002855;
+}
 
-    .toast-cancel-btn:disabled,
-    .toast-confirm-btn:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-.notification-toast {
+.field-actions {
     display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    color: #1E293B;
+    gap: 0.5rem;
 }
-
-    .notification-toast.success {
-        border-left: 4px solid #16A34A;
-    }
-
-    .notification-toast.error {
-        border-left: 4px solid #DC2626;
-    }
-
-.notification-close {
-    border: none;
-    background: none;
-    color: #94A3B8;
-    font-size: 1.2rem;
-    cursor: pointer;
-    line-height: 1;
-}
-
-@media (max-width: 600px) {
-    .confirmation-toast {
-        align-items: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .toast-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-
-/* Toolbar filter */
-.toolbar {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 20px 22px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    align-items: flex-end;
-    margin-bottom: 28px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.field {
-    min-width: 150px;
-}
-
-    .field label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #475569;
-        margin-bottom: 6px;
-    }
-
-    .field input,
-    .field select {
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #CBD5E1;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        font-size: 0.9rem;
-        background-color: #FFFFFF;
-        color: #1E293B;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-        .field input:focus,
-        .field select:focus {
-            outline: none;
-            border-color: #6366F1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-        }
 
 .apply-btn {
-    background-color: #4F46E5;
+    background: #002855;
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 9px 22px;
-    font-size: 0.875rem;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background 0.2s;
 }
 
-    .apply-btn:hover {
-        background-color: #4338CA;
-    }
+.apply-btn:hover {
+    background: #001A38;
+}
 
 .today-btn {
-    background-color: #FFFFFF;
-    border: 1px solid #C7D2FE;
-    color: #4F46E5;
-    border-radius: 8px;
-    padding: 9px 18px;
-    font-size: 0.875rem;
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    transition: background-color 0.15s ease;
 }
 
-    .today-btn:hover {
-        background-color: #EEF2FF;
-    }
-
-.status-msg {
-    color: #64748B;
-    font-style: italic;
-    padding: 32px 0;
-    text-align: center;
+.today-btn:hover {
+    background: #E2E8F0;
 }
 
-/* Tabel riwayat */
+/* ================= TABLE ================= */
+.table-container {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
 .history-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 4px;
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    font-size: 0.82rem;
 }
 
-    .history-table th,
-    .history-table td {
-        padding: 12px 16px;
-        text-align: center;
-        font-size: 0.875rem;
-    }
-
-    .history-table th {
-        background-color: #F8FAFC;
-        color: #64748B;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        border-bottom: 1px solid #E2E8F0;
-    }
-
-    .history-table td {
-        background-color: #FFFFFF;
-        color: #1E293B;
-        border-bottom: 1px solid #F1F5F9;
-    }
-
-.data-row:last-child td {
-    border-bottom: none;
+.history-table th {
+    background: #002855;
+    color: #FFFFFF;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
 }
 
-.data-row:hover td {
-    background-color: #F8FAFC;
+.history-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
+    vertical-align: middle;
+}
+
+.data-row:hover {
+    background: #F8FAFC;
+}
+
+.cell-datetime strong {
+    display: block;
+    color: #0F172A;
+}
+
+.cell-datetime span {
+    font-size: 0.72rem;
+    color: #64748B;
+}
+
+.cell-tag .tag-title {
+    font-family: monospace;
+    font-size: 0.88rem;
+    color: #002855;
+    display: block;
+}
+
+.cell-tag .area-sub {
+    font-size: 0.72rem;
+    color: #64748B;
+}
+
+.unit-badge-tbl {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0369A1;
+    background: #E0F2FE;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.method-badge {
+    font-size: 0.72rem;
+    color: #475569;
+    background: #F1F5F9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.area-val {
+    font-size: 0.95rem;
+    color: #0F172A;
+}
+
+.text-danger { color: #DC2626 !important; }
+
+.wo-cell .wo-status {
+    display: block;
+    font-size: 0.75rem;
+    color: #334155;
+    font-weight: 500;
+}
+
+.wo-cell .wo-num {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #2563EB;
 }
 
 .action-cell {
     display: flex;
-    gap: 8px;
-    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.btn-dossier-sm {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #10B981;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-dossier-sm:hover {
+    background: #059669;
 }
 
 .detail-btn {
-    background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    color: #475569;
-    padding: 5px 14px;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    background: #002855;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-    .detail-btn:hover {
-        border-color: #A5B4FC;
-        color: #4F46E5;
-        background-color: #EEF2FF;
-    }
+.detail-btn:hover {
+    background: #001A38;
+}
 
 .delete-btn {
-    background-color: #FFFFFF;
+    background: transparent;
+    border: 1px solid #FCA5A5;
     color: #DC2626;
-    border: 1px solid #FECACA;
-    padding: 5px 14px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    border-radius: 5px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-    .delete-btn:hover {
-        background-color: #FEF2F2;
-        border-color: #FCA5A5;
-    }
-
-.badge-source {
-    display: inline-block;
-    padding: 3px 12px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    background-color: #E0E7FF;
-    color: #4338CA;
+.delete-btn:hover {
+    background: #FEE2E2;
 }
 
-.area-value {
-    font-weight: 600;
-    color: #1E293B;
+/* ================= DETAIL EXPAND ================= */
+.expand-row {
+    background: #F8FAFC;
 }
-
-    .area-value.high {
-        color: #DC2626;
-    }
 
 .detail-panel {
-    background-color: #F8FAFC;
-    border-left: 3px solid #4F46E5;
-    padding: 16px 20px;
-    font-size: 0.85rem;
-    color: #475569;
-}
-
-    .detail-panel strong {
-        color: #1E293B;
-    }
-
-.detail-list {
-    margin: 10px 0 0;
-    padding-left: 18px;
-}
-
-    .detail-list li {
-        margin-bottom: 6px;
-    }
-
-/* Section per hari (jika dipakai) */
-.day-section {
-    margin-bottom: 32px;
-}
-
-.day-heading {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    border-bottom: 1px solid #E2E8F0;
-    padding-bottom: 10px;
-    margin-bottom: 6px;
-}
-
-.day-num {
-    font-size: 28px;
-    font-weight: 700;
-    color: #4F46E5;
-    line-height: 1;
-}
-
-.day-meta {
-    display: flex;
-    flex-direction: column;
-}
-
-.day-weekday {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1E293B;
-}
-
-.day-month {
-    font-size: 0.75rem;
-    color: #64748B;
-}
-
-.riwayat-table {
-    margin-top: 8px;
-}
-
-@media (max-width: 700px) {
-    .riwayat-page {
-        padding: 24px 16px 48px;
-    }
-
-    .toolbar {
-        padding: 16px;
-    }
-
-    .history-table th,
-    .history-table td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-    }
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px dashed #CBD5E1;
+    border-bottom: 2px solid #CBD5E1;
 }
 
 .detail-image-wrap {
     position: relative;
-    display: block;
-    margin: 12px auto;
-    border: 2px solid #333;
+    display: inline-block;
+    max-width: 100%;
     border-radius: 6px;
-    padding: 4px;
+    overflow: hidden;
     background: #000;
-    width: 220px;
 }
 
-    .detail-image-wrap img {
-        width: 100%;
-        display: block;
-        border-radius: 4px;
-    }
+.detail-image-wrap img {
+    max-width: 100%;
+    display: block;
+}
 
 .image-size-caption {
-    text-align: center;
-    margin: 8px 0 12px;
-    color: #4a3524;
+    font-size: 0.72rem;
+    color: #64748B;
+    margin: 4px 0 0;
 }
 
-.bulk-toolbar {
+.panel-right h5 {
+    margin: 0 0 0.5rem;
+    font-size: 0.88rem;
+    color: #002855;
+}
+
+.info-block {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 0.85rem;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.info-block p {
+    margin: 0 0 0.35rem;
+}
+
+.info-block p:last-child {
+    margin: 0;
+}
+
+.btn-dossier-full {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #002855;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-dossier-full:hover {
+    background: #001A38;
+}
+
+/* ================= TOASTS & STATUS ================= */
+.confirmation-toast {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-left: 4px solid #DC2626;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.toast-actions {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 6px;
-    padding: 6px 4px;
+    gap: 0.5rem;
 }
 
-.selected-count {
-    color: #7a6a52;
-    font-size: 0.8rem;
+.toast-cancel-btn {
+    background: #F1F5F9;
+    border: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-.bulk-delete-btn {
-    background-color: #dc2626;
+.toast-confirm-btn {
+    background: #DC2626;
     color: white;
-    border: 1px solid #dc2626;
-    padding: 5px 14px;
+    border: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.notification-toast {
+    background: #DCFCE7;
+    color: #166534;
+    padding: 0.65rem 1rem;
     border-radius: 6px;
-    cursor: pointer;
-    font-family: Georgia, serif;
-    font-size: 0.8rem;
-}
-
-    .bulk-delete-btn:hover {
-        background-color: #b91c1c;
-        border-color: #b91c1c;
-    }
-
-.select-all-label {
+    margin-bottom: 1rem;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    font-weight: bold;
     font-size: 0.85rem;
-    cursor: pointer;
-    white-space: nowrap;
 }
 
-    .select-all-label input[type="checkbox"] {
-        accent-color: #2563eb;
-    }
+.notification-toast.error {
+    background: #FEE2E2;
+    color: #991B1B;
+}
 
-.bulk-actions-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+.notification-close {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+.loading-state,
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    color: #64748B;
+}
+
+.spinner-small {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #CBD5E1;
+    border-top-color: #002855;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 0.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

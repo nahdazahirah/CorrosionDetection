@@ -1,6 +1,12 @@
-﻿@page "/riwayat"
+@page "/riwayat"
 @attribute [Authorize]
+
 @using System.Net.Http.Json
+@using CorrosionDetectionBlazor.Shared
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Logbook & Berita Acara — Pertamina</PageTitle>
 
 <div class="riwayat-page">
     @if (confirmationSessionId.HasValue)
@@ -8,8 +14,8 @@
         <div class="confirmation-toast" role="alertdialog" aria-live="assertive">
             <div class="toast-icon">!</div>
             <div class="toast-content">
-                <strong>@(confirmationSessionId == -1 ? $"Hapus {selectedIds.Count} riwayat?" : "Hapus riwayat?")</strong>
-                <span>Data deteksi ini akan dihapus secara permanen.</span>
+                <strong>@(confirmationSessionId == -1 ? $"Hapus {selectedIds.Count} riwayat inspeksi?" : "Hapus catatan inspeksi?")</strong>
+                <span>Data audit dan rekaman citra akan dihapus secara permanen dari basis data.</span>
             </div>
             <div class="toast-actions">
                 <button class="toast-cancel-btn" @onclick="CancelDelete" disabled="@isDeleting">Batal</button>
@@ -30,53 +36,87 @@
         </div>
     }
 
-    <h2>Riwayat Deteksi Korosi</h2>
-    <p class="subtitle">Menampilkan data hari ini. Gunakan filter untuk melihat tanggal lain.</p>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-titles">
+            <span class="sub-badge">REKAMAN RESMI PEMERIKSAAN INTEGRITAS</span>
+            <h2>Logbook Inspeksi & Berita Acara Korosi</h2>
+            <p>Arsip terenkripsi data inspeksi visual sesuai kepatuhan standar API 570 / 510 / 653</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-export-csv" @onclick="ExportToCsv" disabled="@(sessions.Count == 0)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Ekspor Data CSV (Excel)
+            </button>
+        </div>
+    </div>
 
+    <!-- Filter Toolbar -->
     <div class="toolbar">
-        <div class="field">
-            <label>Dari tanggal</label>
-            <input type="date" @bind="fromDate" />
+        <div class="filter-row">
+            <div class="field">
+                <label>Wilayah Kilang</label>
+                <select @bind="unitFilter">
+                    <option value="">Semua Wilayah</option>
+                    <option value="RU VI Balongan">RU VI Balongan</option>
+                    <option value="RU IV Cilacap">RU IV Cilacap</option>
+                    <option value="RU II Dumai">RU II Dumai</option>
+                    <option value="RU III Plaju">RU III Plaju</option>
+                    <option value="RU V Balikpapan">RU V Balikpapan</option>
+                    <option value="Pertamina Hulu Rokan (PHR)">PHR</option>
+                    <option value="Pertamina Patra Niaga">Patra Niaga</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Tingkat Keparahan</label>
+                <select @bind="severityFilter">
+                    <option value="">Semua Keparahan</option>
+                    <option value="Critical">Critical (Kritis)</option>
+                    <option value="Severe">Severe (Tinggi)</option>
+                    <option value="Moderate">Moderate (Sedang)</option>
+                    <option value="Low">Low (Rendah)</option>
+                    <option value="Nominal">Nominal (Aman)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Pencarian Tag / Area</label>
+                <input type="text" @bind="searchTerm" placeholder="Ketik tag aset / area..." />
+            </div>
+            <div class="field">
+                <label>Dari Tanggal</label>
+                <input type="date" @bind="fromDate" />
+            </div>
+            <div class="field">
+                <label>Sampai Tanggal</label>
+                <input type="date" @bind="toDate" />
+            </div>
+            <div class="field-actions">
+                <button class="apply-btn" @onclick="LoadHistory">Filter</button>
+                <button class="today-btn" @onclick="ResetFilters">Reset</button>
+            </div>
         </div>
-        <div class="field">
-            <label>Sampai tanggal</label>
-            <input type="date" @bind="toDate" />
-        </div>
-        <div class="field">
-            <label>Sumber</label>
-            <select @bind="sourceType">
-                <option value="">Semua</option>
-                <option value="upload">Upload</option>
-                <option value="webcam">Webcam</option>
-            </select>
-        </div>
-        <div class="field">
-            <label>Urutkan</label>
-            <select @bind="sortBy">
-                <option value="date">Tanggal/Waktu</option>
-                <option value="area">Luas Area Terbesar</option>
-                <option value="count">Jumlah Deteksi</option>
-            </select>
-        </div>
-        <button class="apply-btn" @onclick="LoadHistory">Terapkan</button>
-        <button class="today-btn" @onclick="ResetToToday">Hari Ini</button>
     </div>
 
     @if (isLoading)
     {
-        <p class="status-msg">Memuat riwayat...</p>
+        <div class="loading-state">
+            <div class="spinner-small"></div>
+            <span>Memuat arsip logbook inspeksi...</span>
+        </div>
     }
     else if (sessions.Count == 0)
     {
-        <p class="status-msg">Belum ada riwayat deteksi untuk rentang ini.</p>
+        <div class="empty-state">
+            <p>Tidak ditemukan rekaman inspeksi sesuai kriteria filter di atas.</p>
+            <small>Coba ubah rentang tanggal atau bersihkan kata kunci pencarian.</small>
+        </div>
     }
     else
     {
-        
         @if (selectedIds.Count > 0)
         {
             <div class="bulk-toolbar">
-                <span class="selected-count">@selectedIds.Count dipilih</span>
+                <span class="selected-count">@selectedIds.Count rekaman dipilih</span>
                 <AuthorizeView Roles="Admin" Context="bulkCtx">
                     <Authorized>
                         <button class="bulk-delete-btn" @onclick="AskBulkDelete">Hapus Terpilih</button>
@@ -84,111 +124,155 @@
                 </AuthorizeView>
             </div>
         }
-        
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>
-                        <label class="select-all-label">
+
+        <div class="table-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
                             <input type="checkbox" checked="@AllSelected" @onchange="ToggleSelectAll" />
-                            Pilih Semua
-                        </label>
-                    </th>
-                    <th>Tanggal</th>
-                    <th>Waktu</th>
-                    <th>Sumber</th>
-                    <th>Jumlah Deteksi</th>
-                    <th>Area Terbesar</th>
-                    <th>Detail</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var s in sessions)
-                {
-                    <tr class="data-row">
-                        <td>
-                            <input type="checkbox"
-                                   checked="@selectedIds.Contains(s.Id)"
-                                   @onchange="e => ToggleSelectOne(s.Id, e)" />
-                        </td>
-                        
-                        <td>@s.Timestamp.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("id-ID"))</td>
-                        <td>@s.Timestamp.ToString("HH:mm:ss")</td>
-                        <td><span class="badge-source">@s.SourceType</span></td>
-                        <td>@s.DetectionCount</td>
-                        <td>
-                            <span class="area-value @(s.MaxAreaPercentage > 20 ? "high" : "")">
-                                @s.MaxAreaPercentage.ToString("0.0")%
-                            </span>
-                        </td>
-                        <td class="action-cell">
-                            <button class="detail-btn" @onclick="() => ToggleExpand(s.Id)">
-                                @(expandedId == s.Id ? "Tutup" : "Lihat")
-                            </button>
-                            <AuthorizeView Roles="Admin" Context="authCtx">
-                                <Authorized>
-                                    <button class="delete-btn" @onclick="() => AskDelete(s.Id)">Hapus</button>
-                                </Authorized>
-                            </AuthorizeView>
-                        </td>
+                        </th>
+                        <th>Waktu & Tanggal</th>
+                        <th>Tag Peralatan & Area</th>
+                        <th>Wilayah Kerja</th>
+                        <th>Metode Akuisisi</th>
+                        <th>Keparahan</th>
+                        <th>Luas Max</th>
+                        <th>Status Work Order</th>
+                        <th>Aksi Dokumen</th>
                     </tr>
-                    @if (expandedId == s.Id)
+                </thead>
+                <tbody>
+                    @foreach (var s in sessions)
                     {
-                        <tr>
-                            <td colspan="7" style="padding:0;">
-                                <div class="detail-panel">
-                                    @if (!string.IsNullOrEmpty(s.OriginalImageBase64))
-                                    {
-                                        <div class="detail-image-wrap">
-                                            <img src="data:image/png;base64,@s.OriginalImageBase64" />
-
-                                            @foreach (var item in s.Items)
-                                            {
-                                                <div style="position:absolute;
-                                                    left:@(item.X / s.ImageWidth * 100)%;
-                                                    top:@(item.Y / s.ImageHeight * 100)%;
-                                                    width:@(item.Width / s.ImageWidth * 100)%;
-                                                    height:@(item.Height / s.ImageHeight * 100)%;
-                                                    border:2px solid red;
-                                                    box-sizing:border-box;">
-                                                    <span style="background:red; color:white; font-size:9px; padding:1px 3px;">
-                                                        @item.AreaPercentage.ToString("0.0")%
-                                                    </span>
-                                                </div>
-                                            }
-                                        </div>
-                                        <p class="image-size-caption"><strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px</p>
-                                    }
-                                    else
-                                    {
-                                        <p style="opacity:0.7; font-style:italic; text-align:center;">Gambar tidak tersedia untuk sesi ini.</p>
-                                        <p class="image-size-caption"><strong>Ukuran gambar:</strong> @s.ImageWidth × @s.ImageHeight px</p>
-                                    }
-
-                                    <ul class="detail-list">
-                                        @foreach (var item in s.Items)
-                                        {
-                                            <li>
-                                                Posisi (@item.X.ToString("0"), @item.Y.ToString("0")) ·
-                                                ukuran @item.Width.ToString("0")×@item.Height.ToString("0") px ·
-                                                confidence @((item.Confidence * 100).ToString("0.0"))% ·
-                                                area @item.AreaPercentage.ToString("0.0")%
-                                            </li>
-                                        }
-                                    </ul>
+                        <tr class="data-row @(expandedId == s.Id ? "row-expanded" : "")">
+                            <td>
+                                <input type="checkbox"
+                                       checked="@selectedIds.Contains(s.Id)"
+                                       @onchange="e => ToggleSelectOne(s.Id, e)" />
+                            </td>
+                            <td>
+                                <div class="cell-datetime">
+                                    <strong>@s.Timestamp.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("id-ID"))</strong>
+                                    <span>@s.Timestamp.ToString("HH:mm:ss") WIB</span>
                                 </div>
                             </td>
+                            <td>
+                                <div class="cell-tag">
+                                    <strong class="tag-title">@(s.EquipmentTag ?? "11-TK-102A")</strong>
+                                    <span class="area-sub">@(s.Area ?? "Process Area")</span>
+                                </div>
+                            </td>
+                            <td><span class="unit-badge-tbl">@(s.UnitName ?? "RU VI Balongan")</span></td>
+                            <td><span class="method-badge">@(s.InspectionMethod ?? s.SourceType)</span></td>
+                            <td>
+                                <span class="badge-grade @GetGradeBadgeClass(s.SeverityGrade)">
+                                    @(s.SeverityGrade ?? "Low")
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="area-val @(s.MaxAreaPercentage >= 15 ? "text-danger" : "")">
+                                    @s.MaxAreaPercentage.ToString("0.0")%
+                                </strong>
+                            </td>
+                            <td>
+                                <div class="wo-cell">
+                                    <span class="wo-status">@(s.WorkOrderStatus ?? "Dalam Pemantauan")</span>
+                                    @if (!string.IsNullOrEmpty(s.WorkOrderNumber))
+                                    {
+                                        <small class="wo-num">@s.WorkOrderNumber</small>
+                                    }
+                                </div>
+                            </td>
+                            <td class="action-cell">
+                                <button class="btn-dossier-sm" @onclick="() => OpenDossier(s)" title="Cetak Berita Acara Resmi">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                    Berita Acara
+                                </button>
+                                <button class="detail-btn" @onclick="() => ToggleExpand(s.Id)">
+                                    @(expandedId == s.Id ? "Tutup" : "Preview")
+                                </button>
+                                <AuthorizeView Roles="Admin" Context="authCtx">
+                                    <Authorized>
+                                        <button class="delete-btn" @onclick="() => AskDelete(s.Id)" title="Hapus">×</button>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </td>
                         </tr>
+
+                        @if (expandedId == s.Id)
+                        {
+                            <tr class="expand-row">
+                                <td colspan="9" style="padding: 0;">
+                                    <div class="detail-panel">
+                                        <div class="panel-left">
+                                            @if (!string.IsNullOrEmpty(s.OriginalImageBase64))
+                                            {
+                                                <div class="detail-image-wrap">
+                                                    <img src="data:image/png;base64,@s.OriginalImageBase64" />
+
+                                                    @foreach (var item in s.Items)
+                                                    {
+                                                        <div style="position:absolute;
+                                                                    left:@(item.X / s.ImageWidth * 100)%;
+                                                                    top:@(item.Y / s.ImageHeight * 100)%;
+                                                                    width:@(item.Width / s.ImageWidth * 100)%;
+                                                                    height:@(item.Height / s.ImageHeight * 100)%;
+                                                                    border:2px solid red;
+                                                                    box-sizing:border-box;">
+                                                            @if (!string.IsNullOrEmpty(item.MaskImageBase64))
+                                                            {
+                                                                <img src="data:image/png;base64,@item.MaskImageBase64"
+                                                                     style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                                                            }
+                                                            <span style="background:red; color:white; font-size:9px; padding:1px 3px;">
+                                                                @item.AreaPercentage.ToString("0.0")%
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <p class="image-size-caption">Resolusi Citra: @s.ImageWidth × @s.ImageHeight px | @s.DetectionCount titik anomali</p>
+                                            }
+                                            else
+                                            {
+                                                <p class="no-img-text">Citra tidak tersedia untuk rekaman ini.</p>
+                                            }
+                                        </div>
+
+                                        <div class="panel-right">
+                                            <h5>Informasi Teknis & Rekomendasi Pertamina:</h5>
+                                            <div class="info-block">
+                                                <p><strong>Standar Desain:</strong> @(s.EquipmentType ?? "Process Piping (API 570)")</p>
+                                                <p><strong>Petugas Pemeriksa:</strong> @(s.InspectorName ?? "-") (@(s.InspectorNip ?? "-"))</p>
+                                                <p><strong>Rekomendasi Pemeliharaan:</strong> @(s.Recommendation ?? "Lanjutkan pemantauan rutin.")</p>
+                                                @if (!string.IsNullOrEmpty(s.Notes))
+                                                {
+                                                    <p><strong>Catatan Lapangan:</strong> @s.Notes</p>
+                                                }
+                                            </div>
+
+                                            <button class="btn-dossier-full" @onclick="() => OpenDossier(s)">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                                Cetak Berita Acara Pemeriksaan Resmi (PDF)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     }
 </div>
 
-@code {
-    [Inject] private HttpClient Http { get; set; } = default!;
+<!-- Dossier Modal Component -->
+<PertaminaInspectionDossier IsOpen="@isDossierOpen"
+                            IsOpenChanged="@(val => isDossierOpen = val)"
+                            SessionData="@selectedDossierData" />
 
+@code {
     private List<SessionDto> sessions = new();
     private bool isLoading = false;
     private int? expandedId = null;
@@ -197,23 +281,29 @@
     private string? notificationMessage;
     private bool notificationIsError;
 
-    private DateTime? fromDate = DateTime.Today;
+    // Filters
+    private DateTime? fromDate = DateTime.Today.AddDays(-30);
     private DateTime? toDate = DateTime.Today;
-    private string sourceType = "";
-    private string sortBy = "date";
+    private string unitFilter = "";
+    private string severityFilter = "";
+    private string searchTerm = "";
 
     private HashSet<int> selectedIds = new();
-    private bool isBulkDeleting = false;
-
     private bool AllSelected => sessions.Count > 0 && selectedIds.Count == sessions.Count;
 
+    // Dossier Modal State
+    private bool isDossierOpen = false;
+    private PertaminaInspectionDossier.DossierDataDto? selectedDossierData;
 
     protected override async Task OnInitializedAsync() => await LoadHistory();
 
-    private async Task ResetToToday()
+    private async Task ResetFilters()
     {
-        fromDate = DateTime.Today;
+        fromDate = DateTime.Today.AddDays(-30);
         toDate = DateTime.Today;
+        unitFilter = "";
+        severityFilter = "";
+        searchTerm = "";
         await LoadHistory();
     }
 
@@ -226,18 +316,89 @@
         var query = new List<string>();
         if (fromDate.HasValue) query.Add($"fromDate={fromDate:yyyy-MM-dd}");
         if (toDate.HasValue) query.Add($"toDate={toDate:yyyy-MM-dd}");
-        if (!string.IsNullOrEmpty(sourceType)) query.Add($"sourceType={sourceType}");
-        query.Add($"sortBy={sortBy}");
-        query.Add("sortDesc=true");
+        if (!string.IsNullOrEmpty(unitFilter)) query.Add($"unitName={Uri.EscapeDataString(unitFilter)}");
+        if (!string.IsNullOrEmpty(severityFilter)) query.Add($"severityGrade={Uri.EscapeDataString(severityFilter)}");
+        if (!string.IsNullOrWhiteSpace(searchTerm)) query.Add($"search={Uri.EscapeDataString(searchTerm)}");
 
         try
         {
-            var result = await Http.GetFromJsonAsync<List<SessionDto>>(
-                "api/corrosion/history?" + string.Join("&", query));
+            var result = await Http.GetFromJsonAsync<List<SessionDto>>("api/corrosion/history?" + string.Join("&", query));
             sessions = result ?? new();
         }
         catch { sessions = new(); }
         finally { isLoading = false; }
+    }
+
+    private void OpenDossier(SessionDto s)
+    {
+        selectedDossierData = new PertaminaInspectionDossier.DossierDataDto
+        {
+            Id = s.Id,
+            Timestamp = s.Timestamp,
+            SourceType = s.SourceType,
+            ImageWidth = s.ImageWidth,
+            ImageHeight = s.ImageHeight,
+            DetectionCount = s.DetectionCount,
+            OriginalImageBase64 = s.OriginalImageBase64,
+            UnitName = s.UnitName,
+            Area = s.Area,
+            EquipmentTag = s.EquipmentTag,
+            EquipmentType = s.EquipmentType,
+            InspectionMethod = s.InspectionMethod,
+            InspectorName = s.InspectorName,
+            InspectorNip = s.InspectorNip,
+            SeverityGrade = s.SeverityGrade,
+            WorkOrderStatus = s.WorkOrderStatus,
+            WorkOrderNumber = s.WorkOrderNumber,
+            Notes = s.Notes,
+            Recommendation = s.Recommendation,
+            MaxAreaPercentage = s.MaxAreaPercentage,
+            Items = s.Items.Select(i => new PertaminaInspectionDossier.DossierItemDto
+            {
+                X = i.X,
+                Y = i.Y,
+                Width = i.Width,
+                Height = i.Height,
+                Confidence = i.Confidence,
+                AreaPercentage = i.AreaPercentage,
+                MaskImageBase64 = i.MaskImageBase64
+            }).ToList()
+        };
+
+        isDossierOpen = true;
+    }
+
+    private async Task ExportToCsv()
+    {
+        if (sessions.Count == 0) return;
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("ID,Tanggal,Waktu,WilayahKerja,Area,TagPeralatan,KelasPeralatan,MetodeAkuisisi,JumlahAnomali,LuasAreaMax(%),Keparahan,StatusWorkOrder,NomorWorkOrder,Inspektur,NIP");
+
+        foreach (var s in sessions)
+        {
+            sb.AppendLine($"{s.Id},{s.Timestamp:yyyy-MM-dd},{s.Timestamp:HH:mm:ss},\"{s.UnitName}\",\"{s.Area}\",\"{s.EquipmentTag}\",\"{s.EquipmentType}\",\"{s.InspectionMethod}\",{s.DetectionCount},{s.MaxAreaPercentage:0.0},\"{s.SeverityGrade}\",\"{s.WorkOrderStatus}\",\"{s.WorkOrderNumber}\",\"{s.InspectorName}\",\"{s.InspectorNip}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        var fileName = $"Logbook_Inspeksi_Korosi_Pertamina_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "text/csv", base64);
+    }
+
+    private void ToggleExpand(int id) => expandedId = expandedId == id ? null : id;
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        selectedIds = isChecked ? sessions.Select(s => s.Id).ToHashSet() : new HashSet<int>();
+    }
+
+    private void ToggleSelectOne(int id, ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        if (isChecked) selectedIds.Add(id);
+        else selectedIds.Remove(id);
     }
 
     private void AskDelete(int id)
@@ -246,53 +407,77 @@
         notificationMessage = null;
     }
 
+    private void AskBulkDelete()
+    {
+        if (selectedIds.Count == 0) return;
+        confirmationSessionId = -1;
+        notificationMessage = null;
+    }
+
     private void CancelDelete()
     {
-        if (!isDeleting)
-            confirmationSessionId = null;
+        if (!isDeleting) confirmationSessionId = null;
     }
 
     private async Task ConfirmDelete()
     {
-        if (!confirmationSessionId.HasValue)
-            return;
-
+        if (!confirmationSessionId.HasValue) return;
         var id = confirmationSessionId.Value;
         isDeleting = true;
 
         try
         {
-            var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
-            if (response.IsSuccessStatusCode)
+            var res = await Http.DeleteAsync($"api/corrosion/history/{id}");
+            if (res.IsSuccessStatusCode)
             {
                 sessions.RemoveAll(s => s.Id == id);
-                if (expandedId == id)
-                    expandedId = null;
-
-                notificationMessage = "Riwayat berhasil dihapus.";
+                if (expandedId == id) expandedId = null;
+                notificationMessage = "Catatan inspeksi berhasil dihapus.";
                 notificationIsError = false;
                 confirmationSessionId = null;
             }
-            else
+        }
+        catch { notificationMessage = "Gagal menghapus rekaman."; notificationIsError = true; }
+        finally { isDeleting = false; }
+    }
+
+    private async Task ConfirmBulkDelete()
+    {
+        isDeleting = true;
+        var ids = selectedIds.ToList();
+        int count = 0;
+        foreach (var id in ids)
+        {
+            try
             {
-                notificationMessage = "Riwayat gagal dihapus. Silakan coba lagi.";
-                notificationIsError = true;
+                var res = await Http.DeleteAsync($"api/corrosion/history/{id}");
+                if (res.IsSuccessStatusCode)
+                {
+                    sessions.RemoveAll(s => s.Id == id);
+                    count++;
+                }
             }
+            catch { }
         }
-        catch
-        {
-            notificationMessage = "Tidak dapat terhubung ke server.";
-            notificationIsError = true;
-        }
-        finally
-        {
-            isDeleting = false;
-        }
+        selectedIds.Clear();
+        confirmationSessionId = null;
+        isDeleting = false;
+        notificationMessage = $"{count} rekaman inspeksi berhasil dihapus.";
+        notificationIsError = count < ids.Count;
     }
 
     private void ClearNotification() => notificationMessage = null;
 
-    private void ToggleExpand(int id) => expandedId = expandedId == id ? null : id;
+    private string GetGradeBadgeClass(string? grade)
+    {
+        return grade?.ToLower() switch
+        {
+            "critical" => "grade-critical",
+            "severe" => "grade-severe",
+            "moderate" => "grade-moderate",
+            _ => "grade-low"
+        };
+    }
 
     private class SessionDto
     {
@@ -304,6 +489,18 @@
         public int DetectionCount { get; set; }
         public float MaxAreaPercentage { get; set; }
         public string? OriginalImageBase64 { get; set; }
+        public string? UnitName { get; set; }
+        public string? Area { get; set; }
+        public string? EquipmentTag { get; set; }
+        public string? EquipmentType { get; set; }
+        public string? InspectionMethod { get; set; }
+        public string? InspectorName { get; set; }
+        public string? InspectorNip { get; set; }
+        public string? SeverityGrade { get; set; }
+        public string? WorkOrderStatus { get; set; }
+        public string? WorkOrderNumber { get; set; }
+        public string? Notes { get; set; }
+        public string? Recommendation { get; set; }
         public List<ItemDto> Items { get; set; } = new();
     }
 
@@ -316,57 +513,5 @@
         public float Confidence { get; set; }
         public float AreaPercentage { get; set; }
         public string? MaskImageBase64 { get; set; }
-    }
-
-    private void ToggleSelectAll(ChangeEventArgs e)
-    {
-        var isChecked = (bool)(e.Value ?? false);
-        selectedIds = isChecked
-            ? sessions.Select(s => s.Id).ToHashSet()
-            : new HashSet<int>();
-    }
-
-    private void ToggleSelectOne(int id, ChangeEventArgs e)
-    {
-        var isChecked = (bool)(e.Value ?? false);
-        if (isChecked) selectedIds.Add(id);
-        else selectedIds.Remove(id);
-    }
-
-    private void AskBulkDelete()
-    {
-        if (selectedIds.Count == 0) return;
-        confirmationSessionId = -1; // penanda khusus: -1 berarti mode bulk delete
-        notificationMessage = null;
-    }
-
-    private async Task ConfirmBulkDelete()
-    {
-        isDeleting = true;
-        var idsToDelete = selectedIds.ToList();
-        int successCount = 0;
-
-        foreach (var id in idsToDelete)
-        {
-            try
-            {
-                var response = await Http.DeleteAsync($"api/corrosion/history/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    sessions.RemoveAll(s => s.Id == id);
-                    successCount++;
-                }
-            }
-            catch { /* lanjut ke id berikutnya walau satu gagal */ }
-        }
-
-        selectedIds.Clear();
-        confirmationSessionId = null;
-        isDeleting = false;
-
-        notificationMessage = successCount == idsToDelete.Count
-            ? $"{successCount} riwayat berhasil dihapus."
-            : $"{successCount} dari {idsToDelete.Count} riwayat berhasil dihapus.";
-        notificationIsError = successCount < idsToDelete.Count;
     }
 }
