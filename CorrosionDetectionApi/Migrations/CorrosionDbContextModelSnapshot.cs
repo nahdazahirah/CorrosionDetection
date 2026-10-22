@@ -138,8 +138,17 @@ namespace CorrosionDetectionApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Area")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("DetectionCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("EquipmentTag")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EquipmentType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ImageHeight")
                         .HasColumnType("int");
@@ -147,7 +156,25 @@ namespace CorrosionDetectionApi.Migrations
                     b.Property<int>("ImageWidth")
                         .HasColumnType("int");
 
+                    b.Property<string>("InspectionMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InspectorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("InspectorNip")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OriginalImageBase64")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Recommendation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SeverityGrade")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SourceType")
@@ -156,6 +183,15 @@ namespace CorrosionDetectionApi.Migrations
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("UnitName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkOrderNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkOrderStatus")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

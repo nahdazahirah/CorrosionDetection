@@ -15,10 +15,17 @@ namespace CorrosionDetectionBlazor.Auth
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _js.InvokeAsync<string>("authStorage.getToken");
-            if (!string.IsNullOrEmpty(token))
+            try
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var token = await _js.InvokeAsync<string>("authStorage.getToken");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving token: {ex.Message}");
             }
             return await base.SendAsync(request, cancellationToken);
         }

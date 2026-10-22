@@ -1,0 +1,329 @@
+@using CorrosionDetection.Blazor.Models
+@inject IJSRuntime JS
+
+@if (IsOpen && SessionData != null)
+{
+    <div class="dossier-overlay" @onclick="CloseModal">
+        <div class="dossier-modal" @onclick:stopPropagation="true">
+            <!-- Action Toolbar (Hidden in Print) -->
+            <div class="dossier-toolbar no-print">
+                <div class="toolbar-info">
+                    <span class="badge-dossier">DOKUMEN RESMI PERTAMINA</span>
+                    <strong>No. Dok: BA-CORR/@GetUnitCode(SessionData.UnitName)/@SessionData.Timestamp.ToString("yyyy")/@SessionData.Id.ToString("D5")</strong>
+                </div>
+                <div class="toolbar-buttons">
+                    <button class="btn-dossier-print" @onclick="PrintReport">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        Cetak Berita Acara (PDF)
+                    </button>
+                    <button class="btn-dossier-close" @onclick="CloseModal">✕</button>
+                </div>
+            </div>
+
+            <!-- Printable Formal Pertamina Document -->
+            <div class="dossier-sheet">
+                <!-- Pertamina Corporate Header -->
+                <div class="pertamina-header">
+                    <div class="pertamina-brand">
+                        <div class="pertamina-logo-mark">
+                            <span class="mark-blue"></span>
+                            <span class="mark-green"></span>
+                            <span class="mark-red"></span>
+                        </div>
+                        <div class="pertamina-titles">
+                            <h3>PT PERTAMINA (PERSERO)</h3>
+                            <h4>DIREKTORAT PENGOLAHAN & PETROKIMIA / SUBHOLDING HULU</h4>
+                            <p>Sistem Pemantauan Integritas Aset & Deteksi Korosi Terintegrasi (ICMS)</p>
+                        </div>
+                    </div>
+                    <div class="doc-meta-box">
+                        <div class="doc-meta-row"><span>NO. DOKUMEN:</span> <strong>BA-CORR/@GetUnitCode(SessionData.UnitName)/@SessionData.Timestamp.ToString("yyyy")/@SessionData.Id.ToString("D5")</strong></div>
+                        <div class="doc-meta-row"><span>TANGGAL:</span> <strong>@SessionData.Timestamp.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("id-ID"))</strong></div>
+                        <div class="doc-meta-row"><span>WAKTU:</span> <strong>@SessionData.Timestamp.ToString("HH:mm:ss") WIB</strong></div>
+                        <div class="doc-meta-row"><span>KLASIFIKASI:</span> <strong class="badge-confidential">INTERNAL RESTRICTED</strong></div>
+                    </div>
+                </div>
+
+                <div class="document-title-banner">
+                    <h2>BERITA ACARA PEMERIKSAAN KOROSI & INTEGRITAS ASET</h2>
+                    <span>Standard Compliance: API 570 / API 510 / API 653 & ISO 12944 / NACE SP0108</span>
+                </div>
+
+                <!-- 1. Equipment & Facility Information -->
+                <div class="doc-section">
+                    <h5 class="section-title">I. INFORMASI FASILITAS & TAG PERALATAN</h5>
+                    <table class="pertamina-spec-table">
+                        <tbody>
+                            <tr>
+                                <td class="spec-label">Wilayah Kerja / Kilang</td>
+                                <td class="spec-val"><strong>@(SessionData.UnitName ?? "RU VI Balongan")</strong></td>
+                                <td class="spec-label">Tag Number Peralatan</td>
+                                <td class="spec-val"><strong class="highlight-tag">@(SessionData.EquipmentTag ?? "11-TK-102A")</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="spec-label">Unit Operasi / Area</td>
+                                <td class="spec-val">@(SessionData.Area ?? "Process Area CDU-01")</td>
+                                <td class="spec-label">Kelas Desain Peralatan</td>
+                                <td class="spec-val">@(SessionData.EquipmentType ?? "Process Piping (API 570)")</td>
+                            </tr>
+                            <tr>
+                                <td class="spec-label">Metode Akuisisi Data</td>
+                                <td class="spec-val"><span class="badge-source-method">@(SessionData.InspectionMethod ?? "Patroli Lapangan Operator")</span></td>
+                                <td class="spec-label">Petugas Pemeriksa</td>
+                                <td class="spec-val">@(SessionData.InspectorName ?? "Petugas Inspeksi") (@(SessionData.InspectorNip ?? "NIP. 782419"))</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 2. AI Visual Evidence & Segmentation -->
+                <div class="doc-section">
+                    <h5 class="section-title">II. BUKTI VISUAL & PEMETAAN ANOMALI (COMPUTER VISION)</h5>
+                    <div class="evidence-container">
+                        @if (!string.IsNullOrEmpty(SessionData.OriginalImageBase64))
+                        {
+                            <div class="evidence-viewport">
+                                <img src="data:image/png;base64,@SessionData.OriginalImageBase64" class="evidence-img" />
+
+                                @foreach (var item in SessionData.Items)
+                                {
+                                    <div style="position:absolute;
+                                                left:@(item.X / SessionData.ImageWidth * 100)%;
+                                                top:@(item.Y / SessionData.ImageHeight * 100)%;
+                                                width:@(item.Width / SessionData.ImageWidth * 100)%;
+                                                height:@(item.Height / SessionData.ImageHeight * 100)%;
+                                                border:2px solid @GetBoxColor(item.AreaPercentage);
+                                                box-sizing:border-box;">
+                                        @if (!string.IsNullOrEmpty(item.MaskImageBase64))
+                                        {
+                                            <img src="data:image/png;base64,@item.MaskImageBase64"
+                                                 style="width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;" />
+                                        }
+                                        <span style="background:@GetBoxColor(item.AreaPercentage); color:white; font-size:9px; font-weight:bold; padding:1px 3px; position:relative; z-index:1;">
+                                            @item.AreaPercentage.ToString("0.0")% | conf: @((item.Confidence * 100).ToString("0"))%
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                            <p class="evidence-caption">Resolusi Citra Inspeksi: @SessionData.ImageWidth × @SessionData.ImageHeight px | Jumlah Area Anomali: @SessionData.DetectionCount titik teridentifikasi</p>
+                        }
+                        else
+                        {
+                            <p class="no-evidence">Foto citra tidak terlampir pada database sesi ini.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- 3. Severity Matrix & RBI Classification -->
+                <div class="doc-section">
+                    <h5 class="section-title">III. HASIL ANALISIS KEPARAHAN & RESIKO (API 580/581 RBI)</h5>
+                    <div class="severity-summary-grid">
+                        <div class="summary-metric-card">
+                            <span class="metric-caption">Tingkat Keparahan Korosi</span>
+                            <div class="metric-val">
+                                <span class="badge-grade @GetGradeBadgeClass(SessionData.SeverityGrade)">
+                                    @(SessionData.SeverityGrade ?? "Low")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="summary-metric-card">
+                            <span class="metric-caption">Luas Sebaran Maksimal</span>
+                            <div class="metric-val text-red">
+                                @SessionData.MaxAreaPercentage.ToString("0.0")%
+                            </div>
+                        </div>
+                        <div class="summary-metric-card">
+                            <span class="metric-caption">Status Work Order SAP PM</span>
+                            <div class="metric-val">
+                                <strong>@(SessionData.WorkOrderStatus ?? "Dalam Pemantauan")</strong>
+                                @if (!string.IsNullOrEmpty(SessionData.WorkOrderNumber))
+                                {
+                                    <div class="wo-number-chip">@SessionData.WorkOrderNumber</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Detail Table -->
+                    @if (SessionData.Items.Any())
+                    {
+                        <table class="pertamina-data-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Koordinat (X, Y)</th>
+                                    <th>Dimensi Area</th>
+                                    <th>Confidence AI</th>
+                                    <th>Rasio Luas (%)</th>
+                                    <th>Kategori ISO 12944</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ int idx = 1; }
+                                @foreach (var item in SessionData.Items)
+                                {
+                                    <tr>
+                                        <td>@(idx++)</td>
+                                        <td>(@item.X.ToString("0"), @item.Y.ToString("0"))</td>
+                                        <td>@item.Width.ToString("0") × @item.Height.ToString("0") px</td>
+                                        <td>@((item.Confidence * 100).ToString("0.0"))%</td>
+                                        <td><strong>@item.AreaPercentage.ToString("0.0")%</strong></td>
+                                        <td><span class="badge-iso">@GetIsoRating(item.AreaPercentage)</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <!-- 4. Technical Recommendation & Action Plan -->
+                <div class="doc-section">
+                    <h5 class="section-title">IV. REKOMENDASI TEKNIK & TINDAKAN KOREKTIF</h5>
+                    <div class="recommendation-callout">
+                        <p class="rec-text">@(SessionData.Recommendation ?? "Lanjutkan pemantauan rutin dan inspeksi berkala pada CML terdaftar.")</p>
+                        @if (!string.IsNullOrWhiteSpace(SessionData.Notes))
+                        {
+                            <div class="inspector-notes">
+                                <strong>Catatan Lapangan Operator:</strong>
+                                <span>@SessionData.Notes</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- 5. Sign-off & Authorization -->
+                <div class="doc-section signature-section">
+                    <h5 class="section-title">V. LEMBAR OTORISASI & PENGESAHAN LAPANGAN</h5>
+                    <div class="signature-grid">
+                        <div class="sig-box">
+                            <p class="sig-role">Pemeriksa Lapangan (Inspector)</p>
+                            <div class="sig-space">
+                                <span class="sig-stamp">VERIFIED BY AI-ICMS</span>
+                            </div>
+                            <p class="sig-name"><strong>@(SessionData.InspectorName ?? "Petugas Lapangan")</strong></p>
+                            <p class="sig-nip">@(SessionData.InspectorNip ?? "NIP. 782419")</p>
+                        </div>
+                        <div class="sig-box">
+                            <p class="sig-role">Lead Corrosion Engineer</p>
+                            <div class="sig-space">
+                                <span class="sig-stamp approved">REVIEWED & APPROVED</span>
+                            </div>
+                            <p class="sig-name"><strong>Ir. Handoko Wibowo, ST, MT</strong></p>
+                            <p class="sig-nip">NIP. 801124 — NACE CIP L-3</p>
+                        </div>
+                        <div class="sig-box">
+                            <p class="sig-role">Maintenance Superintendent</p>
+                            <div class="sig-space">
+                                <span class="sig-stamp pending">SAP PM DISPATCH</span>
+                            </div>
+                            <p class="sig-name"><strong>Rian Pratama, S.T.</strong></p>
+                            <p class="sig-nip">NIP. 760912 — Asset Integrity</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Note -->
+                <div class="dossier-footer">
+                    <p>Dokumen ini dihasilkan secara otomatis oleh Pertamina Intelligent Corrosion Monitoring System (ICMS). Rekaman terenkripsi diarsipkan dalam database integritas aset Kilang Pertamina.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public DossierDataDto? SessionData { get; set; }
+
+    private async Task CloseModal()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task PrintReport()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+
+    private string GetUnitCode(string? unitName)
+    {
+        if (string.IsNullOrEmpty(unitName)) return "RU-VI";
+        if (unitName.Contains("Balongan")) return "RU-VI";
+        if (unitName.Contains("Cilacap")) return "RU-IV";
+        if (unitName.Contains("Dumai")) return "RU-II";
+        if (unitName.Contains("Plaju")) return "RU-III";
+        if (unitName.Contains("Balikpapan")) return "RU-V";
+        if (unitName.Contains("Rokan") || unitName.Contains("PHR")) return "PHR";
+        if (unitName.Contains("Patra Niaga")) return "PPN";
+        return "PERTAMINA";
+    }
+
+    private string GetBoxColor(float area)
+    {
+        if (area >= 30) return "#dc2626"; // Crimson
+        if (area >= 15) return "#ea580c"; // Orange
+        if (area >= 5) return "#ca8a04";  // Amber/Yellow
+        return "#16a34a"; // Green
+    }
+
+    private string GetGradeBadgeClass(string? grade)
+    {
+        return grade?.ToLower() switch
+        {
+            "critical" => "grade-critical",
+            "severe" => "grade-severe",
+            "moderate" => "grade-moderate",
+            _ => "grade-low"
+        };
+    }
+
+    private string GetIsoRating(float area)
+    {
+        if (area >= 30) return "Ri 5 (Heavy Scale / Hazard)";
+        if (area >= 15) return "Ri 4 (Pitting Initiation)";
+        if (area >= 5) return "Ri 2-3 (Coating Flaking)";
+        return "Ri 1 (Light Oxidation)";
+    }
+
+    public class DossierDataDto
+    {
+        public int Id { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string? SourceType { get; set; }
+        public int ImageWidth { get; set; }
+        public int ImageHeight { get; set; }
+        public int DetectionCount { get; set; }
+        public string? OriginalImageBase64 { get; set; }
+        public string? UnitName { get; set; }
+        public string? Area { get; set; }
+        public string? EquipmentTag { get; set; }
+        public string? EquipmentType { get; set; }
+        public string? InspectionMethod { get; set; }
+        public string? InspectorName { get; set; }
+        public string? InspectorNip { get; set; }
+        public string? SeverityGrade { get; set; }
+        public string? WorkOrderStatus { get; set; }
+        public string? WorkOrderNumber { get; set; }
+        public string? Notes { get; set; }
+        public string? Recommendation { get; set; }
+        public float MaxAreaPercentage { get; set; }
+        public List<DossierItemDto> Items { get; set; } = new();
+    }
+
+    public class DossierItemDto
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public float Confidence { get; set; }
+        public float AreaPercentage { get; set; }
+        public string? MaskImageBase64 { get; set; }
+    }
+}

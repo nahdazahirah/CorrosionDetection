@@ -1,105 +1,156 @@
 @page "/"
 
-<div class="home-page">
+<PageTitle>Beranda — Pertamina Corrosion Integrity System</PageTitle>
 
+<div class="home-page">
     <!-- HERO -->
     <section class="hero">
         <div class="hero-text">
-            <span class="eyebrow">PT Pertamina Refinery Unit II — Kota Dumai</span>
-            <h1>Deteksi Korosi Berbasis Computer Vision</h1>
+            <div class="pertamina-tagline">
+                <span class="mark-dot"></span>
+                PT PERTAMINA (PERSERO) · DIREKTORAT ASSET INTEGRITY
+            </div>
+            <h1>Deteksi & Pemantauan Korosi Berbasis AI Skala Kilang & Hulu</h1>
             <p class="hero-desc">
-                Sistem bantu inspeksi visual untuk mengidentifikasi dan mengukur luas area korosi
-                pada peralatan industri secara cepat, konsisten, dan terdokumentasi.
+                Platform computer vision enterprise untuk inspeksi visual otomatis, kalkulasi rasio sebaran korosi,
+                dan evaluasi resiko material berbasis <strong>API 570 / API 653 / API 510</strong> serta <strong>ISO 12944</strong>.
+                Menjawab tantangan lingkungan kilang tanpa ketergantungan streaming langsung CCTV.
             </p>
 
             <div class="hero-actions">
                 <AuthorizeView>
                     <Authorized Context="homeCtx">
-                        @if (homeCtx.User.IsInRole("Admin") || homeCtx.User.IsInRole("Operator"))
-                        {
-                            <a href="/corrosion" class="btn btn-primary">Mulai Deteksi</a>
-                            <a href="/riwayat" class="btn btn-outline">Lihat Riwayat</a>
-                        }
-                        else
-                        {
-                            <a href="/riwayat" class="btn btn-primary">Lihat Riwayat</a>
-                            <a href="/tentang" class="btn btn-outline">Tentang Sistem</a>
-                        }
+                        <a href="/dashboard" class="btn btn-primary">Buka Command Center</a>
+                        <a href="/corrosion" class="btn btn-secondary">Studio Inspeksi</a>
+                        <a href="/riwayat" class="btn btn-outline">Logbook & Berita Acara</a>
                     </Authorized>
                     <NotAuthorized>
                         <a href="/login" class="btn btn-primary">Masuk ke Sistem</a>
-                        <a href="/tentang" class="btn btn-outline">Tentang Sistem</a>
+                        <a href="/tentang" class="btn btn-outline">Pelajari Standar Teknis</a>
                     </NotAuthorized>
                 </AuthorizeView>
             </div>
         </div>
 
         <div class="hero-art" aria-hidden="true">
-            <svg viewBox="0 0 420 360" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0" y="0" width="420" height="360" rx="16" fill="#0C2A4E" />
-                <g opacity="0.18" stroke="#FFFFFF" stroke-width="1">
-                    <line x1="0" y1="60" x2="420" y2="60" />
-                    <line x1="0" y1="120" x2="420" y2="120" />
-                    <line x1="0" y1="180" x2="420" y2="180" />
-                    <line x1="0" y1="240" x2="420" y2="240" />
-                    <line x1="0" y1="300" x2="420" y2="300" />
-                    <line x1="70" y1="0" x2="70" y2="360" />
-                    <line x1="140" y1="0" x2="140" y2="360" />
-                    <line x1="210" y1="0" x2="210" y2="360" />
-                    <line x1="280" y1="0" x2="280" y2="360" />
-                    <line x1="350" y1="0" x2="350" y2="360" />
-                </g>
-                <rect x="90" y="90" width="240" height="180" rx="10" fill="none" stroke="#5B3FA0" stroke-width="2.5" />
-                <path d="M120 210 q20 -30 40 -10 q15 20 35 -5 q18 -22 38 4 q16 20 34 -8"
-                      fill="none" stroke="#8FA6C9" stroke-width="2" />
-                <circle cx="160" cy="150" r="16" fill="#C62828" opacity="0.85" />
-                <circle cx="230" cy="190" r="10" fill="#C62828" opacity="0.65" />
-                <circle cx="270" cy="140" r="7" fill="#C62828" opacity="0.5" />
-                <rect x="150" y="138" width="20" height="24" rx="3" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8" />
-                <line x1="90" y1="180" x2="60" y2="180" stroke="#5B3FA0" stroke-width="2" />
-                <line x1="330" y1="180" x2="360" y2="180" stroke="#5B3FA0" stroke-width="2" />
-            </svg>
+            <div class="radar-hud">
+                <div class="hud-circle hud-outer"></div>
+                <div class="hud-circle hud-inner"></div>
+                <div class="hud-crosshair"></div>
+                
+                <!-- Pipe Rack & Flare Graphic Representation -->
+                <div class="asset-symbol-box">
+                    <div class="pipe-node">
+                        <span class="pipe-segment"></span>
+                        <span class="pipe-flange"></span>
+                        <span class="pipe-segment"></span>
+                    </div>
+                    <div class="anomaly-target target-1">
+                        <span class="target-box"></span>
+                        <span class="target-tag">CRIT: 34.2%</span>
+                    </div>
+                    <div class="anomaly-target target-2">
+                        <span class="target-box"></span>
+                        <span class="target-tag">SEV: 18.5%</span>
+                    </div>
+                </div>
+
+                <div class="hud-status">
+                    <span class="hud-label">AI INFERENCE ENGINE</span>
+                    <strong class="hud-val">YOLOv8-SEG ACTIVE</strong>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- STATS -->
+    <!-- ENTERPRISE METRICS -->
     <section class="stats">
         <div class="stat-card">
             <span class="stat-value">9.222+</span>
-            <span class="stat-label">Gambar data latih</span>
+            <span class="stat-label">Citra Latih Korosi Industri</span>
         </div>
         <div class="stat-card">
             <span class="stat-value">77,3%</span>
-            <span class="stat-label">mAP50 segmentasi</span>
+            <span class="stat-label">mAP50 Segmentasi Masking</span>
         </div>
         <div class="stat-card">
-            <span class="stat-value">Real-time</span>
-            <span class="stat-label">Pemindaian webcam</span>
+            <span class="stat-value">3 Metode</span>
+            <span class="stat-label">UAV Drone · Tablet · NVR Frame</span>
         </div>
         <div class="stat-card">
-            <span class="stat-value">3 Peran</span>
-            <span class="stat-label">Admin · Operator · Viewer</span>
+            <span class="stat-value">SAP PM</span>
+            <span class="stat-label">Kesiapan Notifikasi Work Order</span>
         </div>
     </section>
 
-    <!-- CARA KERJA -->
-    <section class="how-it-works">
-        <h2>Cara Kerja</h2>
-        <div class="steps">
-            <div class="step">
-                <span class="step-num">01</span>
-                <strong>Ambil Gambar</strong>
-                <p>Unggah foto peralatan atau gunakan webcam untuk pemindaian langsung.</p>
+    <!-- 3 PILAR AKUISISI UNTUK SKALA KILANG (KENAPA TANPA LIVE CCTV?) -->
+    <section class="pertamina-pillars-section">
+        <div class="section-heading text-center">
+            <span class="sub-badge">SOLUSI REALISTIS SKALA OPERASIONAL</span>
+            <h2>Tiga Pilar Ingesti Data Integritas Tanpa Live CCTV</h2>
+            <p>
+                Pada kilang minyak (refinery) dan anjungan offshore, jaringan CCTV berada dalam segmen OT / SCADA terisolasi (Air-gapped)
+                dan terbatas oleh regulasi keamanan kilang. Sistem ini dirancang untuk bekerja dengan 3 alur praktis enterprise:
+            </p>
+        </div>
+
+        <div class="pillars-grid">
+            <div class="pillar-card">
+                <div class="pillar-icon bg-blue">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>
+                </div>
+                <h3>1. Survei Drone / UAV (Batch)</h3>
+                <p>
+                    Inspeksi terjadwal menggunakan drone industri pada area beresiko tinggi seperti flare stack, pipe rack koridor,
+                    dan atap tangki apung. Mendukung pemrosesan batch hingga puluhan foto sekaligus dalam antrean inferensi.
+                </p>
+                <span class="pillar-benefit">✓ Menghilangkan resiko scaffolding di ketinggian</span>
             </div>
-            <div class="step">
-                <span class="step-num">02</span>
-                <strong>Analisis Model</strong>
-                <p>Model YOLOv8n-seg mendeteksi dan menandai area korosi beserta luas areanya.</p>
+
+            <div class="pillar-card">
+                <div class="pillar-icon bg-green">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                </div>
+                <h3>2. Patroli Lapangan (Tablet ATEX)</h3>
+                <p>
+                    Operator atau Lead Inspector melakukan walkdown inspeksi visual dengan tablet industri bersertifikasi ledakan (intrinsically safe),
+                    memotret sambungan flange dan nozzle, lalu mencatat data CML secara real-time.
+                </p>
+                <span class="pillar-benefit">✓ Dilengkapi tag aset dan rekomendasi perbaikan instan</span>
             </div>
-            <div class="step">
-                <span class="step-num">03</span>
-                <strong>Tinjau &amp; Simpan</strong>
-                <p>Hasil tersimpan otomatis di riwayat, siap ditinjau dan difilter kapan saja.</p>
+
+            <div class="pillar-card">
+                <div class="pillar-icon bg-red">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </div>
+                <h3>3. Still-Frame Terjadwal NVR/CCTV</h3>
+                <p>
+                    Stasioner CCTV mengekspor frame still berkualitas tinggi secara terjadwal (pergantian shift 08:00 &amp; 16:00 WIB)
+                    ke server penyimpanan perantara, memungkinkan deteksi pertumbuhan laju korosi tanpa membebani bandwidth jaringan.
+                </p>
+                <span class="pillar-benefit">✓ Patuh pada isolasi keamanan jaringan SCADA Kilang</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- STANDAR & OUTPUT RESMI -->
+    <section class="standards-banner">
+        <div class="standards-content">
+            <div class="standards-text">
+                <h3>Berita Acara Resmi & Kepatuhan Standar Internasional</h3>
+                <p>
+                    Setiap hasil deteksi diverifikasi dengan matriks keparahan ISO 12944 (Ri 1 hingga Ri 5) dan API 580/581.
+                    Sistem dapat menghasilkan <strong>Berita Acara Pemeriksaan Korosi &amp; Integritas Aset (BA-IKA)</strong> siap cetak atau ekspor PDF dengan nomor dokumen resmi Pertamina.
+                </p>
+                <div class="badges-row">
+                    <span class="std-badge">API 570 Process Piping</span>
+                    <span class="std-badge">API 653 Storage Tanks</span>
+                    <span class="std-badge">API 510 Pressure Vessels</span>
+                    <span class="std-badge">NACE SP0108 / ISO 12944</span>
+                </div>
+            </div>
+            <div class="standards-action">
+                <a href="/corrosion" class="btn btn-white">Mulai Evaluasi Inspeksi →</a>
             </div>
         </div>
     </section>
